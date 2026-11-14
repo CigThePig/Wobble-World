@@ -422,6 +422,16 @@ class Sign extends Node2D:
 		if caption != "":
 			Art.text(self, Vector2(0, rect.end.y - 13), caption, 17, Art.INK, HORIZONTAL_ALIGNMENT_CENTER)
 
+class Backing extends Node2D:
+	# Dark earth behind a pit, so it reads as a cellar instead of a window to the sky.
+	var area := Rect2()
+	func _ready() -> void:
+		z_index = -2
+		add_to_group("tinted")
+	func _draw() -> void:
+		var dark := Art.EARTH_DEEP.darkened(0.45)
+		Art.quad(self, area.position, Vector2(area.end.x, area.position.y), area.end, Vector2(area.position.x, area.end.y), dark.lightened(0.12), dark)
+
 class Pond extends Node2D:
 	var area := Rect2()
 	var clock := 0.0

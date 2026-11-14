@@ -80,6 +80,9 @@ func _ready() -> void:
 	seeds.world = self
 	flora.world = self
 	Level.build(self)
+	var cellar := Props.Backing.new()
+	cellar.area = Rect2(6290, 372, 320, 290)
+	add_child(cellar)
 	var pond := Props.Pond.new()
 	pond.area = Level.POND
 	pond.world = self
