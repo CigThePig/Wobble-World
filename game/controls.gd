@@ -123,9 +123,9 @@ func press(id: int, at: Vector2) -> void:
 	elif at.x < size.x * 0.48 and at.y > size.y * 0.42 and move_id < 0:
 		owners[id] = "move"
 		move_id = id
-		anchor = Vector2(clampf(at.x, inset.x + 70, size.x * 0.44), clampf(at.y, size.y * 0.45, size.y - inset.y - 65))
+		anchor = at
 		thumb = at
-		analog = clampf((at.x - anchor.x) / 85, -1, 1)
+		analog = 0.0
 
 func release(id: int) -> void:
 	if not owners.has(id):
@@ -150,7 +150,7 @@ func _draw() -> void:
 	text_at(Vector2(inset.x, inset.y + 53), status, 17)
 	draw_style_box(panel(cream), Rect2(size.x - inset.x - 110, inset.y, 110, 50))
 	text_at(Vector2(size.x - inset.x - 91, inset.y + 32), "LAB  ≡", 21)
-	var stick := anchor if move_id >= 0 else Vector2(inset.x + 105, size.y - inset.y - 100)
+	var stick := anchor.clamp(Vector2(inset.x + 68, size.y * 0.45), Vector2(size.x * 0.44, size.y - inset.y - 68)) if move_id >= 0 else Vector2(inset.x + 105, size.y - inset.y - 100)
 	draw_circle(stick, 68, Color(0.16,0.35,0.33,0.13))
 	draw_arc(stick, 68, 0, TAU, 48, Color(1,0.98,0.86,0.65), 3, true)
 	draw_circle(stick + Vector2(analog * 47, 0), 28, Color(1,0.98,0.86,0.75))

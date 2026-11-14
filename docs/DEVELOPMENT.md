@@ -10,7 +10,7 @@ Bloop uses a circular **CharacterBody2D**. Walking accelerates/brakes toward a t
 
 Important defaults: walk 270 units/s, acceleration 2100, brake 2500, jump 540, gravity 1450, air acceleration 650, roll drive 310, roll drag 0.16/s, slope force 1250, cap 850, rebound 0.52, coyote 110 ms, jump buffer 130 ms and early-release upward-speed clamp 44% of jump impulse. The spring has a separate upward launch and release-cut lockout.
 
-The floating left anchor accepts one movement owner; jump has its own held owner and roll is an independent press. An existing touch never changes ownership. No gyro is used. Backgrounding/focus loss clears all input and opens the paused lab. Rigid bodies freeze while paused. The world uses canvas_items/expand: phone width reveals more terrain with uniform scale. Control margins include Android's reported safe area, plus gesture clearance. Physical cutouts and thumb reach still require phone feedback.
+The floating left anchor accepts one movement owner; jump has its own held owner and roll is an independent press. An existing touch never changes ownership. The movement anchor uses the exact initial touch, so even an edge contact starts neutral; only the drawn stick is clamped into safe margins. No gyro is used. Backgrounding/focus loss clears all input and opens the paused lab. Rigid bodies freeze while paused. The world uses canvas_items/expand: phone width reveals more terrain with uniform scale. Control margins include Android's reported safe area, plus gesture clearance. Physical cutouts and thumb reach still require phone feedback.
 
 ## Tests and evidence
 
