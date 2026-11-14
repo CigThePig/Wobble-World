@@ -2,6 +2,10 @@
 
 A cheerful mobile physics playground starring **Bloop**: an orange creature with little legs and big downhill ideas. Built with Godot **4.6.1**, GDScript, original vector drawings and synthesized sounds. No editor is needed to play the Android build.
 
+[First playable PR #1](https://github.com/CigThePig/Wobble-World/pull/1) · [Verified build and evidence](docs/STATUS.md)
+
+![Bloop in the actual Godot playground](docs/screenshots/playground-283159bf.jpg)
+
 ## Play on your phone
 
 Open [Android APK runs](https://github.com/CigThePig/Wobble-World/actions/workflows/android.yml), choose a successful run matching the PR's source, and download **WobbleWorld-android-arm64-debug-COMMIT** under Artifacts. Extract its ZIP in Samsung My Files, tap the APK and install **Wobble World Dev**. Full installation/signing notes: [Android guide](docs/ANDROID.md).
