@@ -80,6 +80,11 @@ func _ready() -> void:
 	seeds.world = self
 	flora.world = self
 	Level.build(self)
+	var pond := Props.Pond.new()
+	pond.area = Level.POND
+	pond.world = self
+	pond.add_to_group("tinted")
+	add_child(pond)
 	scatter_flora()
 	add_child(flowers)
 	add_child(seeds)

@@ -45,5 +45,15 @@ func checks() -> void:
 	controls.press(7,Vector2(170,controls.size.y-150))
 	controls.notification(NOTIFICATION_APPLICATION_PAUSED)
 	check(controls.paused and controls.owners.is_empty(), "background cancellation")
+	# A pause over the results card must leave the pause menu usable.
+	controls.set_pause(false)
+	controls.show_results({"seeds":1,"seeds_total":2,"snoozles":0,"snoozles_total":3,"time":1.0})
+	controls.results_t = 1.0
+	controls.notification(NOTIFICATION_APPLICATION_FOCUS_OUT)
+	check(controls.paused, "focus loss over results")
+	controls.press(12,controls.menu_rect(0).get_center())
+	check(not controls.paused and not controls.results.is_empty(), "resume over results card")
+	controls.press(13,controls.results_rect(1).get_center())
+	check(controls.results.is_empty(), "results card dismiss")
 	print("INPUT_CHECKS_PASSED")
 	quit()

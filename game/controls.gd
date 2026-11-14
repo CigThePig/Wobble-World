@@ -158,17 +158,11 @@ func results_rect(i: int) -> Rect2:
 func press(id: int, at: Vector2) -> void:
 	if owners.has(id):
 		return
-	if not results.is_empty():
-		if results_t >= 1.0:
-			if results_rect(0).has_point(at):
-				command.emit("reset_all")
-			elif results_rect(1).has_point(at):
-				results = {}
-		return
 	if pause_rect().grow(8).has_point(at):
 		set_pause(not paused)
 		return
 	if paused:
+		# The pause menu sits above everything, including the results card.
 		for i in MENU.size():
 			if menu_rect(i).has_point(at):
 				if i == 0:
@@ -176,6 +170,13 @@ func press(id: int, at: Vector2) -> void:
 				else:
 					command.emit(MENU[i])
 				return
+		return
+	if not results.is_empty():
+		if results_t >= 1.0:
+			if results_rect(0).has_point(at):
+				command.emit("reset_all")
+			elif results_rect(1).has_point(at):
+				results = {}
 		return
 	started = true
 	if at.distance_to(jump_center) < 68:
