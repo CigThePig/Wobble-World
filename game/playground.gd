@@ -23,7 +23,7 @@ var decorations := RandomNumberGenerator.new()
 func _ready() -> void:
 	if FileAccess.file_exists("res://game/build-source.txt"):
 		source = FileAccess.get_file_as_string("res://game/build-source.txt").strip_edges()
-	terrain = [PackedVector2Array([Vector2(-300,540),Vector2(570,540),Vector2(850,420),Vector2(1030,420),Vector2(1390,640),Vector2(1650,640),Vector2(1900,520),Vector2(2120,520),Vector2(2120,850),Vector2(-300,850)]), PackedVector2Array([Vector2(2250,520),Vector2(2600,520),Vector2(2820,450),Vector2(3600,450),Vector2(3600,850),Vector2(2250,850)]),PackedVector2Array([Vector2(2100,760),Vector2(2270,760),Vector2(2270,850),Vector2(2100,850)])]
+	terrain = [PackedVector2Array([Vector2(-300,540),Vector2(570,540),Vector2(850,420),Vector2(1030,420),Vector2(1390,640),Vector2(1650,640),Vector2(1900,520),Vector2(2120,520),Vector2(2120,1400),Vector2(-300,1400)]), PackedVector2Array([Vector2(2250,520),Vector2(2600,520),Vector2(2820,450),Vector2(3600,450),Vector2(3600,1400),Vector2(2250,1400)]),PackedVector2Array([Vector2(2100,760),Vector2(2270,760),Vector2(2270,1400),Vector2(2100,1400)])]
 	for points in terrain:
 		var body := StaticBody2D.new()
 		var shape := CollisionPolygon2D.new()
@@ -145,6 +145,7 @@ func _physics_process(dt: float) -> void:
 				print("WOBBLE_EVENT bell rings=",bell_rings)
 	var view := get_viewport_rect().size
 	camera.position = Vector2(clampf(bloop.position.x + 120, view.x * 0.5 - 70, 3600 - view.x * 0.5), clampf(bloop.position.y - 90, 300, 480))
+	controls.mode_rolling = bloop.rolling
 	controls.debug_text = "%s · vx %.0f vy %.0f · %s · speed %.0f jump %.0f · %s" % ["ROLL" if bloop.rolling else "WALK",bloop.velocity.x,bloop.velocity.y,"ground" if bloop.is_on_floor() else "air",bloop.tuning.walk_speed,bloop.tuning.jump_impulse,source.left(8)]
 	controls.queue_redraw()
 	if Engine.get_physics_frames() % 60 == 0 and OS.get_name() == "Android":
@@ -236,8 +237,8 @@ func print_layout() -> void:
 	print("WOBBLE_LAYOUT ",JSON.stringify(data))
 
 func layout_check() -> void:
-	await get_tree().process_frame
-	await get_tree().process_frame
+	for i in 30:
+		await get_tree().physics_frame
 	controls.layout()
 	var view := get_viewport_rect().size
 	if controls.jump_center.x+64 >= view.x or controls.jump_center.y+64 >= view.y:

@@ -114,7 +114,7 @@ func _draw() -> void:
 			var stride := sin(phase + side * PI * 0.5) * minf(absf(velocity.x) / 30.0, 9.0)
 			draw_polyline(PackedVector2Array([Vector2(side * 12, 12), Vector2(side * 15 + stride, 25), Vector2(side * 19 + stride, 28)]), ink, 5, true)
 	var s := Vector2(1.0 + squash, 1.0 - squash)
-	draw_set_transform(Vector2(0,-3), 0, s)
+	draw_set_transform(Vector2(0,0 if rolling else -12), 0, s)
 	draw_circle(Vector2(2, 3), 28, Color("d97844"))
 	draw_circle(Vector2.ZERO, 27, Color("ff9950"))
 	draw_circle(Vector2(-10,-14), 9, Color("ffb865"))

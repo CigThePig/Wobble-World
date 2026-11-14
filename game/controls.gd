@@ -8,6 +8,7 @@ var analog := 0.0
 var jump_held := false
 var jump_pending := false
 var roll_pending := false
+var mode_rolling := false
 var paused := false
 var menu := false
 var debug_text := ""
@@ -159,7 +160,7 @@ func _draw() -> void:
 	text_at(jump_center + Vector2(-31,7), "JUMP", 22)
 	draw_circle(roll_center + Vector2(0,4), 51, ink)
 	draw_circle(roll_center, 49, Color("ffd86f"))
-	text_at(roll_center + Vector2(-29,7), "ROLL", 20)
+	text_at(roll_center + Vector2(-29,7), "LEGS" if mode_rolling else "ROLL", 20)
 	text_at(Vector2(inset.x + 260, size.y - inset.y - 16), debug_text, 14)
 	if menu:
 		draw_rect(Rect2(Vector2.ZERO, size), Color(0.08,0.22,0.22,0.9))
