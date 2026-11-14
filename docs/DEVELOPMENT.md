@@ -6,7 +6,7 @@ The entry `game/main.tscn` instantiates `playground.gd`. It builds the authored 
 
 Bloop uses a circular **CharacterBody2D**. Walking accelerates/brakes toward a target speed; air steering is weaker. Rolling instead accumulates force from input and the terrain normal, with low drag, a speed cap and collision restitution. This preserves precise controllability and simple grounded/jump logic without juggling two body types. It is deliberately an arcade rolling controller, not a simulated rotating rigid sphere. Rigid toys receive explicit contact impulses, including Bloop's standing load. Roll orientation is visual; the circular collision shape stays stable through transformations. Physics runs at 60 Hz.
 
-`bloop.gd` owns movement and emits events. Its `_draw` presents squash/stretch, stepping legs, spinning surface marks and velocity-driven eyes. `controls.gd` owns touch routing, cancellation and the lab. `toy.gd` handles rigid toy presentation; `sound.gd` synthesizes original tones through AudioStreamGenerator. All tuning defaults are exported in `tuning.gd`, with the editable resource `tuning.tres`; each Bloop gets a private resource copy. LAB changes are session-only.
+`bloop.gd` owns movement and emits events. Its `_draw` presents squash/stretch, stepping legs, spinning surface marks and velocity-driven eyes. `controls.gd` owns touch routing, cancellation and the lab. `toy.gd` handles rigid toy presentation; `sound.gd` synthesizes short original PCM tones for AudioStreamPlayer. All tuning defaults are exported in `tuning.gd`, with the editable resource `tuning.tres`; each Bloop gets a private resource copy. LAB changes are session-only.
 
 Important defaults: walk 270 units/s, acceleration 2100, brake 2500, jump 540, gravity 1450, air acceleration 650, roll drive 310, roll drag 0.16/s, slope force 1250, cap 850, rebound 0.52, coyote 110 ms, jump buffer 130 ms and early-release upward-speed clamp 44% of jump impulse. The spring has a separate upward launch and release-cut lockout.
 
@@ -27,6 +27,10 @@ Linux requires Xvfb, FFmpeg with libx264 and Pillow 11.3.0 (test-host tools only
 `ci.yml` runs engine checks, one 42-second fixed-clock replay and five layout captures. `android.yml` builds ARM64 from the exact PR head, validates resources/package/ABI/signature/source, exports a matching x86_64 package, then installs and exercises that on one hosted Android 35 emulator. Jobs preserve logs on failure. Both workflows cancel obsolete runs and ignore docs-only edits. Manual dispatch is available after workflows reach main; until then PR updates are the trigger. Do not merge just to expose dispatch.
 
 RPG-test was inspected at initialization: its android/ci/gameplay workflows; gameplay-verify, android-smoke, verify and setup-video runners; AGENTS and agentic/Android/playtesting/gameplay documents. Adopted its real-engine replay → Movie Maker → FFmpeg/contact-sheet → inspection loop, native ADB smoke and optional private development signing. Omitted .NET, RPG dependencies, procedural regions, large test matrices and profiling systems. RPG-test remains unmodified.
+
+## Initial infrastructure corrections
+
+The first hosted replay recorded real frames but conversion found no system FFmpeg; a pinned imageio-ffmpeg fallback supplies it. Android export needed the explicit ETC2/ASTC import setting: Godot 4.6.1 otherwise returns a blank configuration error. The initial launcher assertion incorrectly expected `launchable-activity` from badging; Godot 4.6 uses an exported activity-alias. Validation now inspects that alias, MAIN/LAUNCHER intent and exported flag in the actual binary manifest rather than dropping the launcher check. Standing load replaces upward toy impulses, with a separate horizontal push force to overcome box friction.
 
 ## Next iteration
 

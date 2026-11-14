@@ -58,14 +58,15 @@ try:
     tap('roll')
     wait_for(lambda:any(s['roll']=='true' for s in states()))
     tap('roll')
-    adb('shell','input','swipe',*map(str,layout['move']),*map(str,layout['move_end']),'8000')
+    wait_for(lambda:states() and states()[-1]['roll']=='false')
+    adb('shell','input','swipe',*map(str,layout['move']),*map(str,layout['move_end']),'14000')
     wait_for(lambda:any(float(s['x'])>float(initial['x'])+150 for s in states()))
     wait_for(lambda:any(int(s['bounces'])>=1 for s in states()),20)
     after=capture('after-touch.png')
     # Background then resume must leave an explicit paused menu.
     adb('shell','input','keyevent','3')
     adb('shell','monkey','-p',package,'-c','android.intent.category.LAUNCHER','1')
-    time.sleep(2)
+    wait_for(lambda:'WOBBLE_PAUSED owners=0 axis=0' in logs())
     (out/'resumed.png').write_bytes(adb('exec-out','screencap','-p',raw=True))
     text=logs();(out/'logcat.txt').write_text(text)
     assert 'SCRIPT ERROR:' not in text and 'FATAL EXCEPTION' not in text and 'Fatal signal' not in text

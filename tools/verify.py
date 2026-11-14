@@ -49,11 +49,14 @@ def analyze(path):
     return {n:{'frames':len(rs),'jumps':max(r['jumps'] for r in rs),'bounces':max(r['bounces'] for r in rs),'max_speed':max(abs(r['vx']) for r in rs)} for n,rs in groups.items()}
 
 if __name__=='__main__':
+    sha=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+    dirty=bool(subprocess.check_output(['git','status','--porcelain'],text=True).strip())
+    Path('game/build-source.txt').write_text(sha+(' dirty' if dirty else ''))
     run([GODOT,'--headless','--path','.','--editor','--import','--quit'],'build/import.log')
     result=run([GODOT,'--headless','--path','.','--resolution','1280x720','--fixed-fps','60','--','--replay','--out=build/checks'],'build/checks/engine.log')
     assert 'WOBBLE_REPLAY_COMPLETE' in result
     report=analyze('build/checks/trace.jsonl')
     result=run([GODOT,'--headless','--path','.','--script','res://game/input_checks.gd'],'build/checks/input.log')
     assert 'INPUT_CHECKS_PASSED' in result
-    Path('build/checks/results.json').write_text(json.dumps(report,indent=2))
+    Path('build/checks/results.json').write_text(json.dumps({'source':sha,'dirty':dirty,'scenarios':report},indent=2))
     print('ENGINE CHECKS PASSED')

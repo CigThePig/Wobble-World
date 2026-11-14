@@ -122,6 +122,8 @@ func on_command(action: String) -> void:
 		"jump_down": bloop.tuning.jump_impulse = maxf(300, bloop.tuning.jump_impulse - 30)
 		"jump_up": bloop.tuning.jump_impulse = minf(800, bloop.tuning.jump_impulse + 30)
 		"pause", "resume":
+			if action == "pause":
+				print("WOBBLE_PAUSED owners=%d axis=%.0f" % [controls.owners.size(),controls.axis()])
 			box.freeze = controls.paused
 			seesaw.freeze = controls.paused
 

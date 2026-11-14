@@ -107,6 +107,11 @@ func _physics_process(_dt: float) -> void:
 				world.bloop.velocity.y = -1
 			if local_tick == 34: jump(true)
 			if local_tick == 60: jump(false)
+			if local_tick == 110:
+				world.bloop.position.y -= 300
+				world.bloop.velocity.y = -1
+			if local_tick == 122: jump(true)
+			if local_tick == 123: jump(false)
 		"buffer":
 			if local_tick == 18: jump(true)
 			if local_tick == 55: jump(false)
