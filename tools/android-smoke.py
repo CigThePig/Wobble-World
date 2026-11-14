@@ -7,7 +7,11 @@ sdk=Path(os.environ['ANDROID_HOME']); adb_path=str(sdk/'platform-tools/adb')
 package='com.cigthepig.wobbleworld.dev'
 def adb(*args,raw=False):
     return subprocess.check_output([adb_path,*args],timeout=90 if args[0]=='install' else 25,**({} if raw else {'text':True}))
-def logs():return adb('logcat','-d')
+history={}
+def logs():
+    # Fresh Android boot is noisy; keep readiness markers before logcat rotates.
+    history.update(dict.fromkeys(adb('logcat','-d').splitlines()))
+    return '\n'.join(history)
 def wait_for(fn,seconds=90):
     end=time.monotonic()+seconds
     while time.monotonic()<end:
@@ -33,6 +37,7 @@ try:
     wait_for(booted,240)
     adb('shell','input','keyevent','82')
     (out/'install.log').write_text(adb('install','-r',sys.argv[1]))
+    adb('logcat','-G','16M')
     adb('logcat','-c')
     adb('shell','monkey','-p',package,'-c','android.intent.category.LAUNCHER','1')
     wait_for(lambda:'WOBBLE_LAYOUT ' in logs())
