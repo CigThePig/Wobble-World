@@ -56,7 +56,6 @@ try:
     (out/'layout.json').write_text(json.dumps(layout,indent=2))
     before=capture('initial.png')
     initial=wait_for(lambda:states() and states()[-1])
-    recording=subprocess.Popen([adb_path,'shell','screenrecord','--time-limit','30','/sdcard/wobble.mp4'],stdout=(out/'screenrecord.log').open('w'),stderr=subprocess.STDOUT)
     def tap(key):adb('shell','input','tap',*map(str,layout[key]))
     tap('jump')
     wait_for(lambda:any(int(s['jumps'])>=1 for s in states()))
@@ -64,9 +63,18 @@ try:
     wait_for(lambda:any(s['roll']=='true' for s in states()))
     tap('roll')
     wait_for(lambda:states() and states()[-1]['roll']=='false')
-    adb('shell','input','swipe',*map(str,layout['move']),*map(str,layout['move_end']),'14000')
+    print('Android jump and both mode transitions verified',flush=True)
+    recording=subprocess.Popen([adb_path,'shell','screenrecord','--time-limit','180','--bit-rate','2000000','/sdcard/wobble.mp4'],stdout=(out/'screenrecord.log').open('w'),stderr=subprocess.STDOUT)
+    # Software rendering advances simulation more slowly than the phone. Follow
+    # observed gameplay progress; do not assume 14 wall seconds traverses a hill.
+    for attempt in range(8):
+        adb('shell','input','swipe',*map(str,layout['move']),*map(str,layout['move_end']),'14000')
+        current=states()
+        print('Android route stroke',attempt+1,current[-1] if current else None,flush=True)
+        if any(int(s['bounces'])>=1 for s in current) or 'WOBBLE_EVENT spring' in logs():
+            break
     wait_for(lambda:any(float(s['x'])>float(initial['x'])+150 for s in states()))
-    wait_for(lambda:any(int(s['bounces'])>=1 for s in states()),20)
+    wait_for(lambda:any(int(s['bounces'])>=1 for s in states()),30)
     after=capture('after-touch.png')
     # Background then resume must leave an explicit paused menu.
     adb('shell','input','keyevent','3')
@@ -81,10 +89,15 @@ finally:
     try:
         (out/'logcat.txt').write_text(logs())
         if recording:
-            pids=adb('shell','pidof','screenrecord').strip()
-            if pids:adb('shell','kill','-2',*pids.split())
+            probe=subprocess.run([adb_path,'shell','pidof','screenrecord'],capture_output=True,text=True,timeout=25)
+            if probe.returncode==0:
+                adb('shell','kill','-2',*probe.stdout.split())
+            elif probe.returncode!=1 or probe.stdout.strip():
+                probe.check_returncode()  # Exit 1 with no PID is normal automatic completion.
             recording.wait(timeout=15)
             adb('pull','/sdcard/wobble.mp4',str(out/'android.mp4'))
+            assert (out/'android.mp4').stat().st_size>4096
+            assert b'ftyp' in (out/'android.mp4').read_bytes()[:32]
     finally:
         emu.terminate()
         emu.wait(timeout=20)
