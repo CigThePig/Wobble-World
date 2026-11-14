@@ -97,6 +97,9 @@ func reset_at(at: Vector2) -> void:
 		f.from = f.pos
 		f.to = f.pos
 		f.t = 1.0
+	# Keep the sprout above the taller standing body after spawn/respawn.
+	tip = body_center() + Vector2(0, -VR - 16.0)
+	tip_v = Vector2.ZERO
 	reset_physics_interpolation()
 
 func set_rolling(value: bool) -> void:
@@ -461,7 +464,7 @@ func _draw() -> void:
 				var swing := lerpf(-0.7, 1.75, smoothstep(0.0, 0.4, p)) if p < 0.55 else lerpf(1.75, 0.0, smoothstep(0.55, 1.0, p))
 				foot = hip + Vector2(sin(swing) * facing, cos(swing)) * LEG_KICK_REACH
 			foot = hip.lerp(foot, legs)
-			var lift := maxf(0.0, (contact - feet[i].pos).dot(n)) if grounded else 5.0
+			var lift := maxf(0.0, (feet[i].pos - contact).dot(n)) if grounded else 5.0
 			var knee := hip.lerp(foot, 0.48) + Vector2(side * 3.0 - clampf(velocity.x * 0.02, -6.0, 6.0) - (facing * lift * 0.4), -3.0 - lift * 0.18)
 			if kicking:
 				knee += Vector2(-facing * 8.0, -7.0)
