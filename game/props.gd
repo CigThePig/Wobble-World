@@ -345,13 +345,13 @@ class Bell extends Node2D:
 	func kicked(dir: float, _power: float) -> void:
 		ring(dir * 5.0)
 	func ring(push: float) -> void:
-		swing_v += push
+		swing_v = clampf(swing_v + push, -3.2, 3.2)
 		if world != null:
 			world.ring_bell()
 	func _physics_process(dt: float) -> void:
 		clock += dt
 		swing_v += (-26.0 * swing - 1.1 * swing_v) * dt
-		swing += swing_v * dt
+		swing = clampf(swing + swing_v * dt, -0.55, 0.55)
 		queue_redraw()
 	func _draw() -> void:
 		# Arch.
