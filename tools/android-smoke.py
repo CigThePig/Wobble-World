@@ -42,19 +42,32 @@ try:
     adb('shell','monkey','-p',package,'-c','android.intent.category.LAUNCHER','1')
     wait_for(lambda:'WOBBLE_LAYOUT ' in logs())
     # Dismiss only the known Android immersive-mode introduction when present.
-    adb('shell','uiautomator','dump','/sdcard/window.xml')
-    xml=adb('shell','cat','/sdcard/window.xml');(out/'window.xml').write_text(xml)
     import xml.etree.ElementTree as ET
-    for node in ET.fromstring(xml).iter('node'):
-        if node.get('text')=='Got it':
-            bounds=list(map(int,re.findall(r'\d+',node.get('bounds',''))))
-            adb('shell','input','tap',str((bounds[0]+bounds[2])//2),str((bounds[1]+bounds[3])//2))
+    def dismiss_intro():
+        adb('shell','uiautomator','dump','/sdcard/window.xml')
+        xml=adb('shell','cat','/sdcard/window.xml');(out/'window.xml').write_text(xml)
+        for node in ET.fromstring(xml).iter('node'):
+            if node.get('text')=='Got it':
+                bounds=list(map(int,re.findall(r'\d+',node.get('bounds',''))))
+                adb('shell','input','tap',str((bounds[0]+bounds[2])//2),str((bounds[1]+bounds[3])//2))
+                return True
+        return False
+    dismiss_intro()
     assert 'FATAL EXCEPTION' not in logs() and 'Fatal signal' not in logs()
     sha=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
     assert 'source='+sha in logs()
     layout=json.loads(re.findall(r'WOBBLE_LAYOUT (\{[^\n]+\})',logs())[-1])
     (out/'layout.json').write_text(json.dumps(layout,indent=2))
-    before=capture('initial.png')
+    # The introduction can appear a moment after launch and dims the whole screen.
+    # Keep dismissing it until a clean frame is captured; the colour assertion itself is unchanged.
+    for attempt in range(8):
+        try:
+            before=capture('initial.png')
+            break
+        except AssertionError:
+            if attempt==7:raise
+            dismiss_intro()
+            time.sleep(2)
     initial=wait_for(lambda:states() and states()[-1])
     def tap(key):adb('shell','input','tap',*map(str,layout[key]))
     tap('jump')
