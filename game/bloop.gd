@@ -9,6 +9,10 @@ const R := 27.0
 const VR := 25.5
 const N := 28
 const KICK_TIME := 0.32
+# Presentation only: the bean rises on long legs; the circular physics collider stays put.
+const LEG_BODY_LIFT := 49.0
+const LEG_HIP_DROP := 19.0
+const LEG_KICK_REACH := 56.0
 
 var tuning = preload("res://game/tuning.tres").duplicate()
 var controls: Node
@@ -86,8 +90,12 @@ func reset_at(at: Vector2) -> void:
 	legs = 1.0
 	face_angle = 0.0
 	spin = 0.0
-	for f in feet:
-		f.pos = at + Vector2(0, R)
+	for i in 2:
+		var f: Dictionary = feet[i]
+		var side := -1.0 if i == 0 else 1.0
+		f.pos = at + Vector2(side * 11.0, R)
+		f.from = f.pos
+		f.to = f.pos
 		f.t = 1.0
 	reset_physics_interpolation()
 
@@ -379,29 +387,31 @@ func animate_feet(dt: float) -> void:
 		var f: Dictionary = feet[i]
 		var other: Dictionary = feet[1 - i]
 		if grounded and not rolling:
-			var home := contact + t * (side * 9.0 + clampf(velocity.x * 0.05, -12, 12))
-			var reach := t * clampf(velocity.x * 0.085, -24, 24)
+			# Separate feet stay planted in world space while the bean walks over them.
+			# A wider stride and higher swing make the long legs readable in motion.
+			var home := contact + t * (side * 11.0 + clampf(velocity.x * 0.045, -13.0, 13.0))
+			var reach := t * clampf(velocity.x * 0.075, -23.0, 23.0)
 			if f.t >= 1.0:
 				var off: Vector2 = f.pos - home
-				if (absf(off.dot(t)) > 19.0 and other.t >= 0.55) or off.length() > 46.0:
+				if (absf(off.dot(t)) > 28.0 and other.t >= 0.55) or off.length() > 58.0:
 					f.from = f.pos
 					f.to = home + reach
 					f.t = 0.0
 			else:
-				f.to = home + reach
-				f.t = minf(1.0, f.t + dt * (7.0 + absf(velocity.x) / 20.0))
+				f.t = minf(1.0, f.t + dt * (5.0 + absf(velocity.x) / 55.0))
 				var e: float = smoothstep(0.0, 1.0, f.t)
-				f.pos = f.from.lerp(f.to, e) + n * sin(PI * e) * 10.0
+				f.pos = f.from.lerp(f.to, e) + n * sin(PI * e) * 14.0
 		else:
-			var dangle := global_position + Vector2(side * 10.0 - clampf(velocity.x * 0.035, -12, 12), R - 6.0 - clampf(velocity.y * 0.012, -9, 7))
-			f.pos = f.pos.lerp(dangle, 0.4)
+			# In the air they dangle slightly apart and trail the direction of travel.
+			var dangling := global_position + Vector2(side * 18.0 - clampf(velocity.x * 0.05, -14.0, 14.0), R - 3.0 - clampf(velocity.y * 0.016, -14.0, 8.0))
+			f.pos = f.pos.lerp(dangling, 0.32)
 			f.t = 1.0
 
 func body_center() -> Vector2:
 	var bob := 0.0
 	if grounded and not rolling:
 		bob = sin(clock * 16.0) * minf(absf(velocity.x) / 120.0, 2.2)
-	return Vector2(0, -15.0 * legs + bob * legs)
+	return Vector2(0, -LEG_BODY_LIFT * legs + bob * legs)
 
 func outline_points(c: Vector2) -> PackedVector2Array:
 	var pts := PackedVector2Array()
@@ -435,22 +445,35 @@ func _draw() -> void:
 		var leaf_dir := dir.rotated(side * 0.75)
 		var leaf := Art.ellipse_points(tip + leaf_dir * 8.0, Vector2(10.0, 5.0) * (1.0 if side > 0 else 0.8), leaf_dir.angle(), 12)
 		Art.blob(self, leaf, Art.GRASS_LIGHT if side > 0 else Art.GRASS, ink, 2.6)
-	# Legs.
+	# Pikuniku-like silhouette: long, body-coloured jointed legs and simple
+	# paddle feet, not dark short sticks. All geometry is cosmetic.
 	if legs > 0.03:
+		var n := ground_normal if grounded else Vector2.UP
+		var tangent := Vector2(-n.y, n.x)
+		var contact := global_position - n * R
 		for i in 2:
 			var side := -1.0 if i == 0 else 1.0
-			var hip := c + Vector2(side * 9.0, 15.0)
+			var hip := c + Vector2(side * 10.0, LEG_HIP_DROP)
 			var foot: Vector2 = feet[i].pos - global_position
 			var kicking := kick_t > 0 and side == facing
 			if kicking:
 				var p := 1.0 - kick_t / KICK_TIME
 				var swing := lerpf(-0.7, 1.75, smoothstep(0.0, 0.4, p)) if p < 0.55 else lerpf(1.75, 0.0, smoothstep(0.55, 1.0, p))
-				foot = hip + Vector2(sin(swing) * facing, cos(swing)) * 31.0
+				foot = hip + Vector2(sin(swing) * facing, cos(swing)) * LEG_KICK_REACH
 			foot = hip.lerp(foot, legs)
-			var knee := (hip + foot) * 0.5 + Vector2(facing * 4.0, 0)
-			Art.line(self, Art.curve(hip, knee, foot, 6), ink, 6.0)
-			var toe := foot + Vector2(facing * 4.0, -1.5)
-			Art.ellipse(self, toe, Vector2(8.5, 5.0) * (1.25 if kicking else 1.0) * legs, ink, 0.0, 12)
+			var lift := maxf(0.0, (contact - feet[i].pos).dot(n)) if grounded else 5.0
+			var knee := hip.lerp(foot, 0.48) + Vector2(side * 3.0 - clampf(velocity.x * 0.02, -6.0, 6.0) - (facing * lift * 0.4), -3.0 - lift * 0.18)
+			if kicking:
+				knee += Vector2(-facing * 8.0, -7.0)
+			var shape := PackedVector2Array([hip, knee, foot])
+			Art.line(self, shape, ink, 10.0 * legs)
+			Art.line(self, shape, Art.ORANGE, 7.5 * legs)
+			var toe_direction := facing if absf(velocity.x) > 24.0 or kicking else side
+			var sole := foot + tangent * toe_direction * (9.0 if kicking else 6.5) + n * 0.5
+			var angle := tangent.angle() if not kicking else (foot - hip).angle() - PI * 0.5
+			var foot_size := Vector2(11.0 if kicking else 10.0, 5.3) * legs
+			Art.ellipse(self, sole, foot_size, ink, angle, 12)
+			Art.ellipse(self, sole, foot_size - Vector2(1.7, 1.4) * legs, Art.ORANGE, angle, 12)
 	# Jelly body.
 	var pts := outline_points(c)
 	var mid := Vector2.ZERO
