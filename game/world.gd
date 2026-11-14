@@ -102,7 +102,7 @@ func _ready() -> void:
 	controls.snoozles_total = snoozles.size()
 	sound = preload("res://game/sound.gd").new()
 	sound.process_mode = Node.PROCESS_MODE_ALWAYS
-	sound.with_music = not testing
+	sound.with_music = not testing or "--music" in OS.get_cmdline_user_args()
 	add_child(sound)
 	bloop.event.connect(on_event)
 	camera = Camera2D.new()

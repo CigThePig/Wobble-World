@@ -60,6 +60,8 @@ Movie frames are real renderer output on a fixed clock, not a performance measur
 
 Linux needs Xvfb, FFmpeg with libx264 and Pillow. Set `GODOT=/path/to/Godot_v4.6.1-stable_linux.x86_64` if it is not on PATH.
 
+Local runs use the dummy audio driver, so they prove sounds generate and play without script errors and nothing more. The emulator smoke is the only automated check that mixes audio for real; it caught a crash from looped streams whose loop point sat at the very end of the buffer (see the padding in `sound.gd`).
+
 ## GitHub pipeline
 
 `ci.yml` runs the engine suite, both recordings and the layout captures. `android.yml` builds the ARM64 APK from the PR head, validates package, ABI, signature and embedded source, exports a matching x86_64 package, then installs and exercises it on a hosted Android 35 emulator. The smoke test depends on these log markers and layout keys, so keep them stable: `WOBBLE_READY source=`, `WOBBLE_LAYOUT` (`jump`, `roll`, `move`, `move_end`), `WOBBLE_STATE x= y= jumps= bounces= roll= rings=`, `WOBBLE_EVENT spring`, `WOBBLE_PAUSED owners=0 axis=0`. It also needs the first mushroom to be reachable by walking right from the start with no jump, and Bloop to stay orange on a green world.

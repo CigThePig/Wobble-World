@@ -36,17 +36,23 @@ func _exit_tree() -> void:
 		thread.wait_to_finish()
 
 func wav(data: PackedFloat32Array, loop := false) -> AudioStreamWAV:
+	# A looped stream gets a tail copied from its start. The mixer reads a little
+	# past loop_end when it wraps; with loop_end at the very end of the buffer that
+	# read ran off the allocation and crashed the Android audio thread.
+	var count := data.size()
+	var tail := 256 if loop else 0
 	var bytes := PackedByteArray()
-	bytes.resize(data.size() * 2)
-	for i in data.size():
-		bytes.encode_s16(i * 2, int(clampf(data[i], -1.0, 1.0) * 32000.0))
+	bytes.resize((count + tail) * 2)
+	for i in count + tail:
+		bytes.encode_s16(i * 2, int(clampf(data[i % count], -1.0, 1.0) * 32000.0))
 	var stream := AudioStreamWAV.new()
 	stream.format = AudioStreamWAV.FORMAT_16_BITS
 	stream.mix_rate = RATE
 	stream.data = bytes
 	if loop:
 		stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
-		stream.loop_end = data.size()
+		stream.loop_begin = 0
+		stream.loop_end = count
 	return stream
 
 func sweep(from: float, to: float, seconds: float, gain := 0.5, grit := 0.0, wobble := 0.0, curve := 1.0) -> PackedFloat32Array:
