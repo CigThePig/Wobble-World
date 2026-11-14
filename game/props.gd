@@ -160,7 +160,7 @@ class Critter extends Node2D:
 	var hat := 0
 	var near := false
 	var shown := 0.0
-	var line := 0
+	var line := -1
 	var clock := 0.0
 	var hop := 0.0
 	var hop_v := 0.0
@@ -179,10 +179,10 @@ class Critter extends Node2D:
 			world.fx.burst("star", global_position + Vector2(0, -40), 5)
 	func text() -> String:
 		if ouch > 0:
-			return ["Ow. Rude. Fair, but rude.", "Hey! I bruise like a peach.", "I felt that in my roots."][line % 3]
+			return ["Ow. Rude. Fair, but rude.", "Hey! I bruise like a peach.", "I felt that in my roots."][maxi(line, 0) % 3]
 		if world != null and world.awake and after != "":
 			return after
-		return lines[line % lines.size()]
+		return lines[maxi(line, 0) % lines.size()]
 	func _physics_process(dt: float) -> void:
 		if world == null or absf(world.bloop.position.x - position.x) > 1100:
 			return
