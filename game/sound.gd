@@ -224,5 +224,7 @@ func _process(dt: float) -> void:
 		stem_gain[i] = move_toward(stem_gain[i], want, dt * 0.6)
 		stems[i].volume_db = linear_to_db(maxf(0.001, stem_gain[i])) - 9.0
 	if roller.stream != null:
-		roller.volume_db = linear_to_db(maxf(0.001, roll_level if sfx_on else 0.0)) - 16.0
+		# This node keeps running while paused (for the music), so mute the rumble then.
+		var level := roll_level if sfx_on and not get_tree().paused else 0.0
+		roller.volume_db = linear_to_db(maxf(0.001, level)) - 16.0
 		roller.pitch_scale = 0.7 + roll_level * 0.9
