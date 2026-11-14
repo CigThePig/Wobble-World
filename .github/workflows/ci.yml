@@ -1,0 +1,33 @@
+name: Engine checks and rendered gameplay
+on:
+  pull_request:
+    paths-ignore: ['docs/**', '*.md']
+  push:
+    branches: [main]
+    paths-ignore: ['docs/**', '*.md']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: checks-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - run: bash tools/install-godot.sh
+      - run: python3 -m pip install Pillow==11.3.0
+      - run: git rev-parse HEAD > game/build-source.txt
+      - run: python3 tools/verify.py
+      - run: xvfb-run -a -s '-screen 0 2560x1440x24' python3 tools/gameplay-verify.py
+      - run: xvfb-run -a -s '-screen 0 2560x1440x24' python3 tools/layout-verify.py
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: gameplay-evidence-${{ github.event.pull_request.head.sha || github.sha }}
+          path: build/
+          retention-days: 14
