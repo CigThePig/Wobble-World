@@ -1,35 +1,36 @@
-# First playable delivery
+# Status
 
-Tested executable/evidence source: **283159bf3359bc4d5a1533f1e34d6528eb6d8377**. Later delivery commits contain documentation and renderer previews only. PR #1 remains open and unmerged.
+PR #1 now carries a rebuilt game rather than the original movement test. The repository, Godot 4.6.1 pin, package id, two-thumb control principle and Android pipeline are kept; the game code, level, art and audio are new.
 
-| Area | Result |
+## What changed from the first playable
+
+| Before | Now |
 | --- | --- |
-| Production Godot 4.6.1 scene and 14 gameplay scenarios | Passed in the real engine |
-| Independent touch owners, simultaneous move/jump, roll while moving, releases, pause/background cancellation and neutral edge anchors | Passed engine checks |
-| Actual Movie Maker capture, MP4, PNGs, labelled contact sheet, JSONL input/physics trace and repeated route | Passed |
-| 1280×800, 1280×720, 1920×864, 2340×1080, 1024×768 rendered layouts | Passed |
-| ARM64 APK package, launcher alias, resources, native ELF/ABI, signature, checksum and embedded source | Passed |
-| Android 35 x86_64 install/launch, rendered Bloop/world, OS touch movement, jump, walk/roll transitions, spring, background/resume | Passed on attempt 2 after a transient ADB log-read disconnect |
-| Physical Galaxy S25 comfort, responsiveness, audio quality and subjective movement feel | Pending Ross's playtest |
+| Flat-shaded circle with two line legs | Jelly body with squash, rim jiggle and a ground contact patch; planted, stepping legs; springy sprout; blinking, reactive face |
+| "Roll" was walking with different friction | Ball mode is a separate momentum integrator: slopes accelerate it, ramps launch it, walls bounce it |
+| Two actions | Kick on legs; boost and slam in ball mode; context-scaled mushroom bounces |
+| A strip of toys with labels | One authored level with a start, eight beats, three secrets, checkpoints and an ending |
+| Static green backdrop | Dawn sky with a sleeping sun, parallax hills and clouds, turning to day when the bell rings |
+| Seven beeps | Synthesized effects, rolling rumble, pickup scale and a three-stem music loop that fills in as you progress |
+| Debug text HUD | Icon buttons, seed and snoozle counters, live title card, pause menu, results card |
+| 14 movement scenarios | 17 scenarios plus a bot that must finish the whole level |
 
-## Download and evidence
+## Verified locally on this revision
 
-- [Successful Android workflow](https://github.com/CigThePig/Wobble-World/actions/runs/43534946529)
-- [ARM64 phone APK artifact](https://github.com/CigThePig/Wobble-World/actions/runs/43534946529/artifacts/14089262422)
-- [Passing Android runtime evidence, attempt 2](https://github.com/CigThePig/Wobble-World/actions/runs/43534946529/artifacts/14090010606)
-- [Successful engine/render workflow](https://github.com/CigThePig/Wobble-World/actions/runs/43534946433)
-- [Desktop gameplay MP4, screenshots, contact sheet, traces and reports](https://github.com/CigThePig/Wobble-World/actions/runs/43534946433/artifacts/14088554505)
+| Check | Result |
+| --- | --- |
+| `tools/verify.py`: 17 production-scene scenarios, full bot playthrough, input ownership on five display sizes | Passed in Godot 4.6.1 |
+| `tools/gameplay-verify.py`: Movie Maker recordings of both replays, stills, contact sheets | Passed |
+| `tools/layout-verify.py`: 1280x800, 1280x720, 1920x864, 2340x1080, 1024x768 | Passed |
+| Android APK build and emulator smoke | Runs in GitHub Actions on push; see the PR checks |
+| Physical phone feel, comfort, audio balance, frame rate | **Not tested.** Needs Ross's hands |
 
-The desktop movie is 42 seconds at a fixed clock. The Android recording is approximately 95 seconds of actual hosted software-rendered execution; it is not Galaxy S25 pacing evidence. Android's final paused menu was visually confirmed in the recording around 92.2 seconds. The raw `resumed.png` was captured before the new pause frame appeared; the delivery bundle also includes `paused-menu-from-video-92.2s.png`, extracted from that genuine Android recording.
+Frames opened and inspected by eye: title, pause menu and results card at the S25 aspect; the full-run contact sheet from meadow to sunrise; the scenario contact sheet.
 
-Visually opened: production contact sheets; standing/walking, mode-transition, downhill, spring, box, bell and seesaw views; S25 and tablet compositions; selected consecutive desktop MP4 frames; Android initial/after-touch/resume screenshots and selected Android video frames including the paused menu. This is inspection of real engine output, not a claim that an automated test judges fun. Early visual inspection led to clearer walking legs, a readable mode button, moving the spring label away from diagnostics and extending terrain to fill tablet views.
+## Known limits
 
-## Implemented and intentionally deferred
-
-Implemented: authored playground with gentle/steeper slopes, variable-height jump, distinct momentum-based roll, spring, movable box, pinned seesaw, impact bell, recovery spring beneath the gap, expressive vector Bloop, animated flowers, friendly trees and a reactive bell, original synthesized audio, two-thumb controls, safe-margin scaling, source-labelled diagnostics and LAB reset/tuning controls. Engine tests use production movement and viewport-routed touch input, with no mock controller.
-
-The character's circle controller and explicit toy impulses are arcade approximations. Phone feedback should guide collision weight, rebound, camera motion, button reach and tuning. There are no companions, soft body, campaign, progression saves or local phone trace export in this milestone. LAB changes are session-only. Pair its mode/velocity/grounded/source display with Samsung Screen recorder.
-
-The initial signing key is temporary. Later workflow runs may require uninstalling the older app; persistent development signing secrets are supported. See [Android guide](ANDROID.md). The hosted ADB connection can occasionally drop a read: retry only the failed emulator job before spending resources on another APK/render run. Logs and failed-attempt diagnostics remain available.
-
-RPG-test was read only and remains unmodified. See [development guide](DEVELOPMENT.md) and [AGENTS.md](../AGENTS.md) for continuation.
+- Nobody has played this with thumbs yet. Speeds, camera zoom and button reach are first guesses backed only by a bot finishing the level.
+- One level. No saves; best times and seed counts are not kept.
+- Music and effects were checked for generating and playing without errors, not listened to.
+- Rigid toys are simple: the crate and ball respawn at home if they leave the yard or fall in the pit.
+- The emulator smoke only walks right, jumps, toggles roll and reaches the first mushroom; it does not play the level.

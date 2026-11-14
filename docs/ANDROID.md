@@ -15,14 +15,16 @@ Toolchain: official Godot 4.6.1 GDScript editor and matching non-.NET templates,
 
 ## Galaxy S25 checklist
 
-- Walk, stop and reverse; try small and large thumb drags. Does Bloop respond predictably?
-- Hold left-thumb movement and tap/hold JUMP repeatedly; also toggle ROLL while moving. Watch for lost or stuck input.
-- Compare leg precision with rolling momentum. Climb on legs, roll downhill, release, reverse and extend legs to brake.
-- Use the spring, push the box, stand on either end of the seesaw and wake the bell. Look for snags, unstable bodies or confusing collisions.
-- Check button reach, cutout/gesture clearance, readability, squash/eyes/legs, transformation and audio feedback.
-- Open LAB with movement held; background with fingers down, return and Resume. Movement should remain released. Try the resets and tuning buttons.
-- Report crashes, visible stutters, unexpected launches or resets. Include the build identifier shown along the bottom and the workflow link.
+- Walk, stop and reverse with small and large thumb drags. Does Bloop respond predictably?
+- Hold movement while tapping and holding Jump, toggling Roll and tapping Action. Watch for lost or stuck input.
+- Roll down the first hill and over the pond. Is the speed readable? Does the camera keep up without making you queasy?
+- Kick the ball and the crate. Does the kick land where you expect? Is opening the gate obvious?
+- Slam the cracked floor, wake the snoozle, boing back out. Then hold Jump on the big mushroom to clear the wall.
+- Boost down the long descent and ride the launch ramp. Ring the bell.
+- Check button reach, cutout and gesture clearance, readability of the icons, and sound and music levels.
+- Pause with movement held; background with fingers down, return and resume. Movement should stay released.
+- Report crashes, stutters, getting stuck, or any place you didn't know what to do. Turn on the Lab overlay in the pause menu and include the build identifier it shows.
 
-Use Samsung Screen recorder plus LAB's velocity/grounded/mode/collision display. A useful report includes the approximate video time, thumb inputs, expected behaviour and actual result. Optional local trace export is deferred in this first milestone; automated replay JSONL is available in CI evidence. Nothing uploads from the game.
+Samsung Screen recorder plus the Lab overlay (mode, velocity, grounded, position, source) makes a useful report: approximate video time, what your thumbs did, what you expected, what happened. Nothing uploads from the game.
 
-The emulator checks install/launch, rendered Bloop/scenery, OS touch movement, jump, mode switching, spring interaction and background/resume captures. Its pass is separate from physical-device comfort, audio and responsiveness. No Galaxy S25 acceptance is claimed until Ross tests it.
+The emulator checks install and launch, that Bloop and the world render, OS touch movement, jump, mode switching, the first mushroom and background/resume. Its pass is separate from physical-device comfort, audio and responsiveness. No Galaxy S25 acceptance is claimed until Ross tests it.

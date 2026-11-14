@@ -1,37 +1,73 @@
 # Development and observation
 
-## Architecture and tradeoffs
+## Architecture
 
-The entry `game/main.tscn` instantiates `playground.gd`. It builds the authored terrain, camera, spring Area2D, bell Area2D, box, pinned rigid seesaw, character and UI. There are no addons or external game assets.
+`game/main.tscn` instantiates `world.gd`, which builds everything in code. There are no addons or imported game assets.
 
-Bloop uses a circular **CharacterBody2D**. Walking accelerates/brakes toward a target speed; air steering is weaker. Rolling instead accumulates force from input and the terrain normal, with low drag, a speed cap and collision restitution. This preserves precise controllability and simple grounded/jump logic without juggling two body types. It is deliberately an arcade rolling controller, not a simulated rotating rigid sphere. Rigid toys receive explicit contact impulses, including Bloop's standing load. Roll orientation is visual; the circular collision shape stays stable through transformations. Physics runs at 60 Hz.
+| File | Role |
+| --- | --- |
+| `world.gd` | Scene assembly, level-building helpers, every Bloop/world interaction (mushrooms, kick, slam, gate, pond, checkpoints, bell, sunrise), camera, log markers |
+| `level.gd` | The level as data: terrain control points, prop placements, seed trails, dialogue |
+| `bloop.gd` | Movement for both modes, plus the jelly body, stepping legs, sprout and face |
+| `controls.gd` | Touch ownership, keyboard fallback, HUD, title, pause menu, results card |
+| `terrain.gd` | Spline-smoothed solid land: collision polygon and cached layered drawing |
+| `props.gd` | Mushroom, toy (crate/ball), plate, gate, crumble block, critter, snoozle, checkpoint, bell, sign, pond |
+| `scatter.gd` | Sunseeds and swaying flora, one node each, culled to the camera |
+| `backdrop.gd` | Screen-space sky, sun, clouds and parallax hills, blended by `day` |
+| `fx.gd` | Small particle painter |
+| `sound.gd` | Threaded PCM synthesis: effects, a rolling rumble and a three-stem music loop |
+| `art.gd` | Palette and drawing helpers (antialiased fills, icons) |
+| `tuning.gd` / `tuning.tres` | All movement numbers |
+| `replay.gd`, `replay_observer.gd`, `input_checks.gd`, `dev_shots.gd` | Test and capture harness |
 
-`bloop.gd` owns movement and emits events. Its `_draw` presents squash/stretch, stepping legs, spinning surface marks and velocity-driven eyes. `controls.gd` owns touch routing, cancellation and the lab. `toy.gd` handles rigid toy presentation; `sound.gd` synthesizes short original PCM tones for AudioStreamPlayer. All tuning defaults are exported in `tuning.gd`, with the editable resource `tuning.tres`; each Bloop gets a private resource copy. LAB changes are session-only.
+### Two movement models on one body
 
-Important defaults: walk 270 units/s, acceleration 2100, brake 2500, jump 540, gravity 1450, air acceleration 650, roll drive 310, roll drag 0.16/s, slope force 1250, cap 850, rebound 0.52, coyote 110 ms, jump buffer 130 ms and early-release upward-speed clamp 44% of jump impulse. The spring has a separate upward launch and release-cut lockout.
+Bloop is one circular `CharacterBody2D` (radius 27).
 
-The floating left anchor accepts one movement owner; jump has its own held owner and roll is an independent press. An existing touch never changes ownership. The movement anchor uses the exact initial touch, so even an edge contact starts neutral; only the drawn stick is clamped into safe margins. No gyro is used. Backgrounding/focus loss clears all input and opens the paused lab. Rigid bodies freeze while paused. The world uses canvas_items/expand: phone width reveals more terrain with uniform scale. Control margins include Android's reported safe area, plus gesture clearance. Physical cutouts and thumb reach still require phone feedback.
+**Legs** use `move_and_slide`: acceleration and braking toward a target speed, weaker air steering, coyote time, jump buffering and a release-cut jump. Slopes do not slide. Rigid toys get explicit push and standing-load impulses. Platform velocity inheritance is disabled so a toy squirting out from underfoot cannot fling Bloop.
+
+**Ball** uses a small custom integrator built on `move_and_collide`. Gravity is never cancelled; each contact removes the velocity component into the surface (with restitution above a speed threshold). That alone gives downhill acceleration, launches off ramps and wall rebounds without special cases. Input adds force along the ground tangent, with stronger braking against the direction of travel. Rigid bodies get a two-body impulse exchange. The pound replaces velocity with a fast drop and converts the landing into a bounce and a `pound_at` world event; the boost adds tangent speed on a cooldown.
+
+Mushrooms are not colliders. The world tests Bloop against each cap and calls `launch`, which scales by context: 1.0 normally, 1.2 with jump held, 1.45 from a pound. Level gating relies on these ratios; see the notes at the top of `level.gd` before changing jump or bounce numbers.
+
+### Presentation
+
+The body is a 28-point outline. A single squash spring compresses along the contact normal (or stretches along flight), a damped ring wave adds rim jiggle on impact, and points are clamped to the ground line so the ball visibly flattens where it rests. Feet are planted in world space and step when they fall behind. The sprout is a spring that lags behind motion. All of it is visual; the collision circle never changes.
+
+The Compatibility renderer has no 2D MSAA, so `Art.fill` adds an antialiased edge line to filled shapes. Physics runs at 60 Hz with physics interpolation enabled for high-refresh phones; teleports call `reset_physics_interpolation`.
+
+Dawn is a tint on nodes in the `tinted` group plus the backdrop's own palette blend. Bloop, seeds and effects stay untinted so they glow against it. Ringing the bell animates `day` from 0 to 1.
+
+Pausing uses the scene tree's pause; the HUD layer, sound and replay nodes keep processing. Backgrounding or focus loss clears all input and opens the pause menu.
+
+### Input
+
+A floating left anchor accepts one movement owner; jump has one held owner; roll and action are independent presses. An existing touch never changes ownership. The anchor is the exact initial touch, so an edge contact starts neutral; only the drawn stick is clamped. Past 55% deflection the stick reads as full speed. Control margins include Android's safe area. No gyro.
 
 ## Tests and evidence
 
-`tools/verify.py` imports through the actual pinned engine, runs 14 fixed-step production-scene scenarios and input ownership tests, and rejects engine/script errors. The replay drives the root viewport's `push_input(event, true)` so logical coordinates aren't accidentally transformed as OS pixels. A low-priority observer samples after production physics; fixture teleports at scenario boundaries are explicit and aren't counted as travel.
+`tools/verify.py` imports with the pinned engine, then runs:
 
-Scenarios cover walking/stopping/reversing; short/held jumps while moving; walking to rolling and back; downhill momentum; spring; box; airborne mode changes; interrupted gesture cancellation; coyote window; buffered landing; bell; seesaw; and a repeated walking route. Assertions check actual displacement, jump heights, simultaneous ownership, residual roll speed, return-to-walk braking, finite values, toy movement and interaction events. This checks correctness, not enjoyment. Minor subpixel contact settling is tolerated in the repeated route; rigid-body pileups are not promised bit-identical across platforms.
+1. **17 fixed-step scenarios** in the production scene (`--replay`), driven by real viewport touch events: walk/stop/reverse, short and held jumps, coyote, buffer, focus-loss cancellation, legs-to-ball and back, a repeated route, the boing ledge, the hill leap over the pond, falling in the pond and respawning, the mushroom garden, kicking and pushing the crate to open the gate, slamming the hollow floor and climbing out with the snoozle, the big boing, the boosted descent and launch, and ringing the bell through to the results card.
+2. **A full playthrough** (`--replay=full`): a small position-aware bot plays from the start to the results card. It must finish with no pond falls, the gate opened, the floor broken, at least one snoozle and at least 80 seeds, inside 75 seconds of game time.
+3. **Input ownership checks** across the five supported display sizes.
 
-`tools/gameplay-verify.py` runs the same scene under **Godot Movie Maker** at a fixed 60 Hz. It captures production viewport PNGs, records the actual engine's AVI, transcodes it to H.264 MP4 and produces a labelled contact sheet. JSONL rows link scenario/tick/frame to controls, position, velocity, grounded state, mode and interactions. Labels identify screenshot ticks. Movie timing is not a runtime performance benchmark. `layout-verify.py` captures all five requested window sizes with a real display.
+Any engine or script error fails the run. The bot reads world state to decide what to press, but everything it does goes through the same touch events a thumb would produce. Scenario fixtures teleport Bloop at boundaries; world state (gate, floor, seeds) deliberately carries across scenarios.
 
-Linux requires Xvfb, FFmpeg with libx264 and Pillow 11.3.0 (test-host tools only). Use GODOT=/path/to/Godot_v4.6.1-stable_linux.x86_64 if needed. CI uses the runner's Xvfb and installs Pillow plus imageio-ffmpeg 0.6.0 (a pinned FFmpeg fallback when the runner has no ffmpeg). The host tools are not bundled with the game. Inspect `build/evidence/contact-sheet.jpg`, relevant PNG sequences and `gameplay.mp4`. Open consecutive event frames if a collision or animation looks wrong, then repeat after the fix. `build/layout` contains phone and tablet compositions. Never substitute synthetic diagrams for renderer evidence.
+`tools/gameplay-verify.py` records both replays with Godot Movie Maker at a fixed 60 Hz, transcodes to MP4, saves labelled stills and builds `contact-sheet.jpg` and `full-run-sheet.jpg`. `tools/layout-verify.py` captures the five window sizes. `--shots=x:y[:flags];...` (see `dev_shots.gd`) saves arbitrary frames for visual checks.
+
+Movie frames are real renderer output on a fixed clock, not a performance measurement. Tests establish that the level works and can be finished. They say nothing about whether it feels good in the hand.
+
+Linux needs Xvfb, FFmpeg with libx264 and Pillow. Set `GODOT=/path/to/Godot_v4.6.1-stable_linux.x86_64` if it is not on PATH.
 
 ## GitHub pipeline
 
-`ci.yml` runs engine checks, one 42-second fixed-clock replay and five layout captures. `android.yml` builds ARM64 from the exact PR head, validates resources/package/ABI/signature/source, exports a matching x86_64 package, then installs and exercises that on one hosted Android 35 emulator. Jobs preserve logs on failure. Both workflows cancel obsolete runs and ignore docs-only edits. Manual dispatch is available after workflows reach main; until then PR updates are the trigger. Do not merge just to expose dispatch.
+`ci.yml` runs the engine suite, both recordings and the layout captures. `android.yml` builds the ARM64 APK from the PR head, validates package, ABI, signature and embedded source, exports a matching x86_64 package, then installs and exercises it on a hosted Android 35 emulator. The smoke test depends on these log markers and layout keys, so keep them stable: `WOBBLE_READY source=`, `WOBBLE_LAYOUT` (`jump`, `roll`, `move`, `move_end`), `WOBBLE_STATE x= y= jumps= bounces= roll= rings=`, `WOBBLE_EVENT spring`, `WOBBLE_PAUSED owners=0 axis=0`. It also needs the first mushroom to be reachable by walking right from the start with no jump, and Bloop to stay orange on a green world.
 
-RPG-test was inspected at initialization: its android/ci/gameplay workflows; gameplay-verify, android-smoke, verify and setup-video runners; AGENTS and agentic/Android/playtesting/gameplay documents. Adopted its real-engine replay → Movie Maker → FFmpeg/contact-sheet → inspection loop, native ADB smoke and optional private development signing. Omitted .NET, RPG dependencies, procedural regions, large test matrices and profiling systems. RPG-test remains unmodified.
+Both workflows cancel superseded runs and ignore docs-only edits.
 
-## Initial infrastructure corrections
+## Tuning notes
 
-The first hosted replay recorded real frames but conversion found no system FFmpeg; a pinned imageio-ffmpeg fallback supplies it. Android export needed the explicit ETC2/ASTC import setting: Godot 4.6.1 otherwise returns a blank configuration error. The initial launcher assertion incorrectly expected `launchable-activity` from badging; Godot 4.6 uses an exported activity-alias. Validation now inspects that alias, MAIN/LAUNCHER intent and exported flag in the actual binary manifest rather than dropping the launcher check. The legacy emulator `swiftshader_indirect` backend reached the scene but failed to link Godot canvas shaders (a flat clear-colour screenshot); smoke now uses `swangle`, as in the reference project, while preserving the Bloop/scenery pixel assertions. The smoke harness also accumulates logcat reads and enlarges the emulator log buffer so Android first-boot chatter cannot erase the exact source/readiness markers before validation. The emulator route uses bounded repeated OS gestures until telemetry confirms the spring, rather than assuming phone-like simulation progress in a fixed wall-clock swipe. Automatic screenrecord completion is handled as normal when collecting the video. Standing load replaces upward toy impulses, with a separate horizontal push force to overcome box friction.
+Legs: walk 300, jump 620 (about 125 px), gravity 1500. Ball: tangent drive 620, brake 1100, drag 0.1/s, cap 1150, restitution 0.42 above 280 px/s, boost 430, pound bounce 760. Mushrooms 900 (1090 in the pit).
 
-## Next iteration
-
-Use the source-labelled APK, Samsung screen recording, LAB diagnostics and a short report of expected/actual behaviour. Reproduce one issue with a replay, adjust one factor, inspect it and send a new APK. No automated score establishes whether Bloop feels good. Defer companions, campaign systems and soft-body work until phone feedback supports the foundation.
+Level gates that depend on those numbers: ledges of 160 to 170 need a mushroom; the 320 wall needs a held-jump or slam boing; the pond gap needs roughly 650 px/s at the lip (a full run down the hill arrives near 900); the pit needs its stronger mushroom.

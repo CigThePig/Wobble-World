@@ -1,6 +1,6 @@
 # Attribution
 
-Bloop, scenery, toy drawings and synthesized game sounds are original procedural work created for Wobble World. No Pikuniku or LocoRoco artwork/audio/code is included. Their names describe creative influences only.
+Bloop, the level, scenery, characters, dialogue and all synthesized sounds and music are original procedural work created for Wobble World. No Pikuniku or LocoRoco artwork/audio/code is included. Their names describe creative influences only.
 
 Godot Engine is MIT licensed: https://godotengine.org/license/ . Its Android export includes engine notices. The fallback UI font is distributed with Godot; see the engine's bundled third-party notices.
 
