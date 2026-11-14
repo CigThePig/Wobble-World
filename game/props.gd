@@ -28,8 +28,8 @@ class Mushroom extends Node2D:
 		var half := width * 0.5 * (1.0 + s * 0.25)
 		var stem := PackedVector2Array([Vector2(-width * 0.2, 2), Vector2(-width * 0.15, cap_y + 8), Vector2(width * 0.15, cap_y + 8), Vector2(width * 0.2, 2)])
 		Art.blob(self, stem, Art.CREAM, Art.INK, 3.5)
-		draw_circle(Vector2(-7, cap_y * 0.5 + 8), 2.4, Art.INK)
-		draw_circle(Vector2(7, cap_y * 0.5 + 8), 2.4, Art.INK)
+		Art.disc(self, Vector2(-7, cap_y * 0.5 + 8), 2.4, Art.INK)
+		Art.disc(self, Vector2(7, cap_y * 0.5 + 8), 2.4, Art.INK)
 		var cap := PackedVector2Array()
 		for i in 15:
 			var a := PI + i * PI / 14.0
@@ -80,21 +80,21 @@ class Toy extends RigidBody2D:
 		var ouch := blink > 0
 		if kind == "ball":
 			Art.blob(self, Art.ellipse_points(Vector2.ZERO, Vector2(22, 22)), Art.LILAC, Art.INK, 4.0)
-			draw_arc(Vector2.ZERO, 15, 0.4, 2.2, 10, Color("9a80e0"), 4, true)
+			Art.arc(self, Vector2.ZERO, 15, 0.4, 2.2, 10, Color("9a80e0"), 4)
 		else:
 			Art.blob(self, Art.rounded_rect(Rect2(-31, -31, 62, 62), 9), Color("f2c26b"), Art.INK, 4.0)
-			draw_line(Vector2(-31, -12), Vector2(31, -12), Color("d99c45"), 4)
-			draw_line(Vector2(-31, 14), Vector2(31, 14), Color("d99c45"), 4)
+			Art.stroke(self, Vector2(-31, -12), Vector2(31, -12), Color("d99c45"), 4)
+			Art.stroke(self, Vector2(-31, 14), Vector2(31, 14), Color("d99c45"), 4)
 		for x in [-9.0, 9.0]:
 			if ouch:
-				draw_line(Vector2(x - 4, -4), Vector2(x + 4, 2), Art.INK, 2.6, true)
-				draw_line(Vector2(x - 4, 2), Vector2(x + 4, -4), Art.INK, 2.6, true)
+				Art.stroke(self, Vector2(x - 4, -4), Vector2(x + 4, 2), Art.INK, 2.6)
+				Art.stroke(self, Vector2(x - 4, 2), Vector2(x + 4, -4), Art.INK, 2.6)
 			else:
-				draw_circle(Vector2(x, -1), 3.2, Art.INK)
+				Art.disc(self, Vector2(x, -1), 3.2, Art.INK)
 		if ouch:
-			draw_circle(Vector2(0, 9), 3.5, Art.INK)
+			Art.disc(self, Vector2(0, 9), 3.5, Art.INK)
 		else:
-			draw_arc(Vector2(0, 5), 4.5, 0.3, PI - 0.3, 8, Art.INK, 2.4, true)
+			Art.arc(self, Vector2(0, 5), 4.5, 0.3, PI - 0.3, 8, Art.INK, 2.4)
 
 class Plate extends Node2D:
 	var pressed := false
@@ -130,13 +130,13 @@ class Gate extends StaticBody2D:
 	func _draw() -> void:
 		Art.blob(self, Art.rounded_rect(Rect2(-26, -height, 52, height), 12), Color("8f7fb0"), Art.INK, 4.5)
 		for i in 5:
-			draw_line(Vector2(-26, -height + 50 + i * 58), Vector2(26, -height + 50 + i * 58), Color("7767a0"), 4)
+			Art.stroke(self, Vector2(-26, -height + 50 + i * 58), Vector2(26, -height + 50 + i * 58), Color("7767a0"), 4)
 		# A grumpy face that would rather stay shut.
-		draw_line(Vector2(-14, -height + 24), Vector2(-5, -height + 28), Art.INK, 3, true)
-		draw_line(Vector2(14, -height + 24), Vector2(5, -height + 28), Art.INK, 3, true)
-		draw_circle(Vector2(-9, -height + 33), 2.6, Art.INK)
-		draw_circle(Vector2(9, -height + 33), 2.6, Art.INK)
-		draw_arc(Vector2(0, -height + 46), 5, PI + 0.3, TAU - 0.3, 8, Art.INK, 2.5, true)
+		Art.stroke(self, Vector2(-14, -height + 24), Vector2(-5, -height + 28), Art.INK, 3)
+		Art.stroke(self, Vector2(14, -height + 24), Vector2(5, -height + 28), Art.INK, 3)
+		Art.disc(self, Vector2(-9, -height + 33), 2.6, Art.INK)
+		Art.disc(self, Vector2(9, -height + 33), 2.6, Art.INK)
+		Art.arc(self, Vector2(0, -height + 46), 5, PI + 0.3, TAU - 0.3, 8, Art.INK, 2.5)
 
 class Crumble extends StaticBody2D:
 	var size := 50.0
@@ -149,8 +149,8 @@ class Crumble extends StaticBody2D:
 	func _draw() -> void:
 		var h := size * 0.5
 		Art.blob(self, Art.rounded_rect(Rect2(-h + 1, -h, size - 2, size), 7), Color("d9b48a"), Art.INK, 3.5)
-		draw_polyline(PackedVector2Array([Vector2(-h + 8, -6), Vector2(-6, 2), Vector2(-10, 14), Vector2(4, h - 6)]), Color("8a6a55"), 2.5, true)
-		draw_polyline(PackedVector2Array([Vector2(-6, 2), Vector2(10, -8), Vector2(h - 7, -4)]), Color("8a6a55"), 2.5, true)
+		Art.line(self, PackedVector2Array([Vector2(-h + 8, -6), Vector2(-6, 2), Vector2(-10, 14), Vector2(4, h - 6)]), Color("8a6a55"), 2.5)
+		Art.line(self, PackedVector2Array([Vector2(-6, 2), Vector2(10, -8), Vector2(h - 7, -4)]), Color("8a6a55"), 2.5)
 
 class Critter extends Node2D:
 	var lines: Array = []
@@ -184,7 +184,7 @@ class Critter extends Node2D:
 			return after
 		return lines[maxi(line, 0) % lines.size()]
 	func _physics_process(dt: float) -> void:
-		if world == null or absf(world.bloop.position.x - position.x) > 1100:
+		if world == null or absf(world.bloop.position.x - position.x) > 900:
 			return
 		clock += dt
 		ouch = maxf(0, ouch - dt)
@@ -203,7 +203,8 @@ class Critter extends Node2D:
 			shown += dt * 34.0
 			if int(shown) != before and int(shown) % 3 == 0 and int(shown) < text().length():
 				world.sound.chirp("blip")
-		queue_redraw()
+		if near or hop < 0 or ouch > 0 or Engine.get_physics_frames() % 4 == 0:
+			queue_redraw()
 	func _draw() -> void:
 		var h := 58.0 * tall
 		var breathe := sin(clock * 2.2) * 2.0
@@ -223,18 +224,18 @@ class Critter extends Node2D:
 			dir = clampf((world.bloop.position.x - position.x) / 120.0, -1, 1) * 3.0
 		for x in [-9.0, 9.0]:
 			if ouch > 0:
-				draw_line(face + Vector2(x - 4, -3), face + Vector2(x + 4, 3), Art.INK, 2.6, true)
-				draw_line(face + Vector2(x - 4, 3), face + Vector2(x + 4, -3), Art.INK, 2.6, true)
+				Art.stroke(self, face + Vector2(x - 4, -3), face + Vector2(x + 4, 3), Art.INK, 2.6)
+				Art.stroke(self, face + Vector2(x - 4, 3), face + Vector2(x + 4, -3), Art.INK, 2.6)
 			elif awake:
 				Art.ellipse(self, face + Vector2(x, 0), Vector2(5.5, 6.5), Art.CREAM, 0.0, 12)
-				draw_circle(face + Vector2(x + dir, 0.5), 2.8, Art.INK)
+				Art.disc(self, face + Vector2(x + dir, 0.5), 2.8, Art.INK)
 			else:
-				draw_arc(face + Vector2(x, 0), 4.5, 0.2, PI - 0.2, 8, Art.INK, 2.5, true)
-		draw_arc(face + Vector2(0, 11), 4.0, 0.2, PI - 0.2, 8, Art.INK, 2.4, true)
+				Art.arc(self, face + Vector2(x, 0), 4.5, 0.2, PI - 0.2, 8, Art.INK, 2.5)
+		Art.arc(self, face + Vector2(0, 11), 4.0, 0.2, PI - 0.2, 8, Art.INK, 2.4)
 		match hat:
 			1:
 				var top := Vector2(0, -h + hop)
-				draw_polyline(Art.curve(top, top + Vector2(-4, -14), top + Vector2(8 + breathe, -22)), Art.INK, 3.5, true)
+				Art.line(self, Art.curve(top, top + Vector2(-4, -14), top + Vector2(8 + breathe, -22)), Art.INK, 3.5)
 				Art.blob(self, Art.ellipse_points(top + Vector2(12 + breathe, -24), Vector2(8, 5), -0.5, 12), Art.GRASS_LIGHT, Art.INK, 2.5)
 			2:
 				var top := Vector2(0, -h + 3 + hop)
@@ -258,8 +259,8 @@ class Critter extends Node2D:
 		var pts := Art.rounded_rect(rect, 16)
 		Art.blob(self, pts, Art.CREAM * fix, Art.INK, 3.5)
 		var tail := PackedVector2Array([Vector2(-10, rect.end.y - 2), Vector2(0, rect.end.y + 16), Vector2(10, rect.end.y - 2)])
-		draw_colored_polygon(tail, Art.CREAM * fix)
-		draw_polyline(PackedVector2Array([tail[0] + Vector2(0, 2), tail[1], tail[2] + Vector2(0, 2)]), Art.INK, 3.5, true)
+		Art.fill(self, tail, Art.CREAM * fix, false)
+		Art.line(self, PackedVector2Array([tail[0] + Vector2(0, 2), tail[1], tail[2] + Vector2(0, 2)]), Art.INK, 3.5)
 		draw_multiline_string(font, rect.position + Vector2(16, 12 + font.get_ascent(size)), shown_text, HORIZONTAL_ALIGNMENT_LEFT, width, size, -1, Art.INK)
 
 class Snoozle extends Node2D:
@@ -270,6 +271,7 @@ class Snoozle extends Node2D:
 	var hue := Color("ffe9a8")
 	var world: Node
 	var perch := Vector2.ZERO
+	var drawn_awake := false
 	func _ready() -> void:
 		perch = position
 		z_index = 4
@@ -279,49 +281,55 @@ class Snoozle extends Node2D:
 		clock += dt
 		if awake:
 			# Follow Bloop's recorded trail, a few steps behind.
+			# Hopping is done by moving the node, so the awake snoozle is drawn only once.
 			var target: Vector2 = world.trail_point(18 + order * 16)
-			position = position.lerp(target, 0.16)
-			hop = absf(sin(clock * 7.0 + order)) * 7.0 if position.distance_to(target) > 6 or world.awake else 0.0
-		elif absf(world.bloop.position.x - position.x) > 1200:
+			perch = perch.lerp(target, 0.16)
+			hop = absf(sin(clock * 7.0 + order)) * 7.0 if perch.distance_to(target) > 6 or world.awake else 0.0
+			position = perch + Vector2(0, -hop)
+			if drawn_awake:
+				return
+			drawn_awake = true
+		elif absf(world.bloop.position.x - position.x) > 950 or Engine.get_physics_frames() % 4 != 0:
 			return
 		queue_redraw()
 	func _draw() -> void:
 		if not awake:
 			# Asleep on a small cloud.
 			for o in [Vector2(-24, 12), Vector2(0, 16), Vector2(24, 12), Vector2(-10, 6), Vector2(12, 6)]:
-				draw_circle(o + Vector2(0, sin(clock * 1.5) * 2.0), 15, Color(1, 1, 1, 0.92))
+				Art.disc(self, o + Vector2(0, sin(clock * 1.5) * 2.0), 15, Color(1, 1, 1, 0.92))
 			for k in 3:
 				var t := fmod(clock * 0.5 + k / 3.0, 1.0)
 				Art.text(self, Vector2(14 + t * 26, -22 - t * 40), "z", int(13 + t * 12), Color(1, 1, 1, 1.0 - t))
-		var bob := sin(clock * 1.5) * 2.0 if not awake else -hop
+		var bob := sin(clock * 1.5) * 2.0 if not awake else 0.0
 		var c := Vector2(0, -8 + bob)
 		Art.blob(self, Art.ellipse_points(c, Vector2(15, 13.5 + (0.0 if awake else sin(clock * 1.5))), 0.0, 18), hue, Art.INK, 3.5)
 		Art.blob(self, PackedVector2Array([c + Vector2(-11, -9), c + Vector2(3, -30 + bob * 0.3), c + Vector2(12, -8)]), Art.TEAL, Art.INK, 3.0)
-		draw_circle(c + Vector2(3, -30 + bob * 0.3), 4.5, Art.CREAM)
+		Art.disc(self, c + Vector2(3, -30 + bob * 0.3), 4.5, Art.CREAM)
 		for x in [-5.5, 5.5]:
 			if awake:
-				draw_circle(c + Vector2(x, -1), 2.6, Art.INK)
+				Art.disc(self, c + Vector2(x, -1), 2.6, Art.INK)
 			else:
-				draw_arc(c + Vector2(x, -1), 3.2, 0.2, PI - 0.2, 6, Art.INK, 2.2, true)
+				Art.arc(self, c + Vector2(x, -1), 3.2, 0.2, PI - 0.2, 6, Art.INK, 2.2)
 		if awake:
-			draw_arc(c + Vector2(0, 3), 3.5, 0.3, PI - 0.3, 6, Art.INK, 2.0, true)
+			Art.arc(self, c + Vector2(0, 3), 3.5, 0.3, PI - 0.3, 6, Art.INK, 2.0)
 
 class Checkpoint extends Node2D:
+	var world: Node
 	var lit := false
 	var bloom := 0.0
 	var clock := 0.0
 	func _ready() -> void:
 		z_index = 1
 	func _physics_process(dt: float) -> void:
-		if lit:
-			clock += dt
+		if lit and (bloom < 1.0 or (Engine.get_physics_frames() % 3 == 0 and world != null and absf(world.bloop.position.x - position.x) < 950)):
+			clock += dt * (1.0 if bloom < 1.0 else 3.0)
 			bloom = minf(1.0, bloom + dt * 2.5)
 			queue_redraw()
 	func _draw() -> void:
 		var sway := sin(clock * 2.0) * 4.0 * bloom
 		var top := Vector2(sway, -74)
-		draw_polyline(Art.curve(Vector2.ZERO, Vector2(-6, -40), top), Art.INK, 7, true)
-		draw_polyline(Art.curve(Vector2.ZERO, Vector2(-6, -40), top), Art.GRASS, 3.5, true)
+		Art.line(self, Art.curve(Vector2.ZERO, Vector2(-6, -40), top), Art.INK, 7)
+		Art.line(self, Art.curve(Vector2.ZERO, Vector2(-6, -40), top), Art.GRASS, 3.5)
 		Art.blob(self, Art.ellipse_points(Vector2(-14, -30), Vector2(13, 6), 0.5, 12), Art.GRASS, Art.INK, 3.0)
 		var e := bloom * bloom * (3.0 - 2.0 * bloom)
 		for i in 6:
@@ -352,7 +360,8 @@ class Bell extends Node2D:
 		clock += dt
 		swing_v += (-26.0 * swing - 1.1 * swing_v) * dt
 		swing = clampf(swing + swing_v * dt, -0.55, 0.55)
-		queue_redraw()
+		if world != null and absf(world.bloop.position.x - position.x) < 1100 and (absf(swing) > 0.002 or absf(swing_v) > 0.01 or Engine.get_physics_frames() % 4 == 0):
+			queue_redraw()
 	func _draw() -> void:
 		# Arch.
 		var arch := PackedVector2Array()
@@ -362,8 +371,8 @@ class Bell extends Node2D:
 		var frame := PackedVector2Array([Vector2(-130, 6)])
 		frame.append_array(arch)
 		frame.append(Vector2(130, 6))
-		draw_polyline(frame, Art.INK, 30, true)
-		draw_polyline(frame, Color("8f7fb0"), 21, true)
+		Art.line(self, frame, Art.INK, 30)
+		Art.line(self, frame, Color("8f7fb0"), 21)
 		for x in [-130.0, 130.0]:
 			Art.blob(self, Art.rounded_rect(Rect2(x - 26, -8, 52, 20), 8), Color("7767a0"), Art.INK, 4)
 		# Bell hangs from the keystone and swings.
@@ -372,18 +381,18 @@ class Bell extends Node2D:
 		Art.stroke(self, Vector2.ZERO, Vector2(0, 120), Art.INK, 7)
 		var body := PackedVector2Array([Vector2(-22, 122), Vector2(-34, 150), Vector2(-40, 196), Vector2(-64, 232), Vector2(64, 232), Vector2(40, 196), Vector2(34, 150), Vector2(22, 122)])
 		Art.blob(self, body, Art.GOLD, Art.INK, 5.0)
-		draw_line(Vector2(-52, 214), Vector2(52, 214), Color("f0a93c"), 6)
+		Art.stroke(self, Vector2(-52, 214), Vector2(52, 214), Color("f0a93c"), 6)
 		Art.blob(self, Art.ellipse_points(Vector2(0, 246), Vector2(15, 15), 0.0, 16), Color("f0a93c"), Art.INK, 4.0)
 		for x in [-14.0, 14.0]:
 			if rung:
 				Art.ellipse(self, Vector2(x, 170), Vector2(6, 7.5), Art.CREAM, 0.0, 12)
-				draw_circle(Vector2(x, 171), 3.2, Art.INK)
+				Art.disc(self, Vector2(x, 171), 3.2, Art.INK)
 			else:
-				draw_arc(Vector2(x, 168), 6, 0.2, PI - 0.2, 8, Art.INK, 3.2, true)
+				Art.arc(self, Vector2(x, 168), 6, 0.2, PI - 0.2, 8, Art.INK, 3.2)
 		if rung:
-			draw_arc(Vector2(0, 186), 9, 0.2, PI - 0.2, 10, Art.INK, 3.2, true)
+			Art.arc(self, Vector2(0, 186), 9, 0.2, PI - 0.2, 10, Art.INK, 3.2)
 		else:
-			draw_line(Vector2(-5, 190), Vector2(5, 190), Art.INK, 3.2, true)
+			Art.stroke(self, Vector2(-5, 190), Vector2(5, 190), Art.INK, 3.2)
 		draw_set_transform(Vector2.ZERO)
 		if not rung:
 			for k in 3:
@@ -429,14 +438,11 @@ class Pond extends Node2D:
 		for i in n + 1:
 			var x := area.position.x + area.size.x * i / n
 			top.append(Vector2(x, area.position.y + sin(clock * 2.2 + x * 0.03) * 5.0))
-		var body := PackedVector2Array(top)
-		body.append(area.end)
-		body.append(Vector2(area.position.x, area.end.y))
-		draw_colored_polygon(body, Color(0.2, 0.62, 0.78, 0.78))
-		var deep := PackedVector2Array()
-		for p in top:
-			deep.append(p + Vector2(0, 46))
-		deep.append(area.end)
-		deep.append(Vector2(area.position.x, area.end.y))
-		draw_colored_polygon(deep, Color(0.14, 0.45, 0.68, 0.5))
-		draw_polyline(top, Color(0.85, 0.98, 1.0, 0.95), 5, true)
+		var water := Color(0.2, 0.62, 0.78, 0.78)
+		var deep := Color(0.13, 0.42, 0.68, 0.9)
+		for i in n:
+			var a := top[i]
+			var b := top[i + 1]
+			Art.quad(self, a, b, b + Vector2(0, 60), a + Vector2(0, 60), water, deep)
+			Art.quad(self, a + Vector2(0, 60), b + Vector2(0, 60), Vector2(b.x, area.end.y), Vector2(a.x, area.end.y), deep, deep)
+		Art.line(self, top, Color(0.85, 0.98, 1.0, 0.95), 5)

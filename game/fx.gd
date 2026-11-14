@@ -64,23 +64,24 @@ func _draw() -> void:
 		match p.k:
 			"puff":
 				color.a *= 1.0 - f
-				draw_circle(p.p, p.s * (0.6 + f * 1.3), color)
+				Art.glow(self, p.p, p.s * (0.9 + f * 1.9), color)
 			"spark":
 				var s: float = maxf(0.4, p.s * (1.0 - f))
-				draw_colored_polygon(PackedVector2Array([p.p + Vector2(0, -s * 1.6), p.p + Vector2(s, 0), p.p + Vector2(0, s * 1.6), p.p + Vector2(-s, 0)]), color)
+				Art.quad(self, p.p + Vector2(0, -s * 1.6), p.p + Vector2(s, 0), p.p + Vector2(0, s * 1.6), p.p + Vector2(-s, 0), color, color)
 			"star":
 				var s: float = p.s * (1.0 - f * 0.7)
 				for k in 2:
 					var d: Vector2 = Vector2.from_angle(p.r + k * PI * 0.5) * s
-					draw_line(p.p - d, p.p + d, color, 3.2, true)
+					var w := Vector2(-d.y, d.x).normalized() * 1.6
+					Art.quad(self, p.p - d - w, p.p + d - w, p.p + d + w, p.p - d + w, color, color)
 			"drop":
 				color.a *= 1.0 - f * f
-				draw_circle(p.p, p.s * (1.0 - f * 0.5), color)
+				Art.disc(self, p.p, p.s * (1.0 - f * 0.5), color)
 			"chunk", "confetti":
 				color.a *= minf(1.0, (1.0 - f) * 3.0)
 				var a: Vector2 = Vector2.from_angle(p.r) * p.s
 				var b: Vector2 = Vector2.from_angle(p.r + PI * 0.5) * p.s * (0.55 if p.k == "confetti" else 0.9)
-				draw_colored_polygon(PackedVector2Array([p.p - a - b, p.p + a - b, p.p + a + b, p.p - a + b]), color)
+				Art.quad(self, p.p - a - b, p.p + a - b, p.p + a + b, p.p - a + b, color, color)
 			"ring":
 				color.a *= 1.0 - f
-				draw_arc(p.p, p.s * (0.4 + f * 3.2), 0, TAU, 36, color, 7.0 * (1.0 - f) + 1.0, true)
+				Art.hoop(self, p.p, p.s * (0.4 + f * 3.2), color, 7.0 * (1.0 - f) + 1.0)

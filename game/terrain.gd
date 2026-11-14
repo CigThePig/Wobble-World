@@ -74,9 +74,12 @@ func shifted(run: PackedVector2Array, dy: float) -> PackedVector2Array:
 	return out
 
 func _draw() -> void:
+	# Drawn once and cached; everything is a batched primitive.
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_value
-	draw_colored_polygon(poly, Art.EARTH)
+	var indices := Geometry2D.triangulate_polygon(poly)
+	for i in range(0, indices.size(), 3):
+		Art.tri(self, poly[indices[i]], poly[indices[i + 1]], poly[indices[i + 2]], Art.EARTH)
 	if strata:
 		# Bands that follow the surface, like layers of cut paper.
 		for band in [[34.0, 78.0, Art.EARTH_DARK], [150.0, 235.0, Art.EARTH_DARK], [330.0, 2400.0, Art.EARTH_DEEP]]:
@@ -86,20 +89,14 @@ func _draw() -> void:
 					var b := run[i + 1]
 					var wa := sin(a.x * 0.011) * 9.0
 					var wb := sin(b.x * 0.011) * 9.0
-					draw_colored_polygon(PackedVector2Array([a + Vector2(0, band[0] + wa), b + Vector2(0, band[0] + wb), b + Vector2(0, band[1] + wb * 1.6), a + Vector2(0, band[1] + wa * 1.6)]), band[2])
+					Art.quad(self, a + Vector2(0, band[0] + wa), b + Vector2(0, band[0] + wb), b + Vector2(0, band[1] + wb * 1.6), a + Vector2(0, band[1] + wa * 1.6), band[2], band[2])
 		for run in runs:
 			var span := run[run.size() - 1].x - run[0].x
 			for i in int(span / 60.0):
 				var x := rng.randf_range(run[0].x + 14, run[run.size() - 1].x - 14)
 				var y := height_at(x) + rng.randf_range(95, 140)
-				Art.ellipse(self, Vector2(x, y), Vector2(rng.randf_range(4, 10), rng.randf_range(3, 6)), Art.EARTH_DARK, rng.randf_range(-0.4, 0.4), 10)
+				Art.fill(self, Art.ellipse_points(Vector2(x, y), Vector2(rng.randf_range(4, 10), rng.randf_range(3, 6)), rng.randf_range(-0.4, 0.4), 8), Art.EARTH_DARK, false)
 	for run in runs:
-		var first := run[0]
-		var last := run[run.size() - 1]
-		draw_polyline(shifted(run, 7), Art.GRASS_DARK, 22, true)
-		draw_circle(first + Vector2(0, 7), 11, Art.GRASS_DARK)
-		draw_circle(last + Vector2(0, 7), 11, Art.GRASS_DARK)
-		draw_polyline(shifted(run, 1), Art.GRASS, 13, true)
-		draw_circle(first + Vector2(0, 1), 6.5, Art.GRASS)
-		draw_circle(last + Vector2(0, 1), 6.5, Art.GRASS)
-		draw_polyline(shifted(run, -3.5), Art.GRASS_LIGHT, 3.5, true)
+		Art.line(self, shifted(run, 7), Art.GRASS_DARK, 22)
+		Art.line(self, shifted(run, 1), Art.GRASS, 13)
+		Art.line(self, shifted(run, -3.5), Art.GRASS_LIGHT, 3.5, false)

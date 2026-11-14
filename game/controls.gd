@@ -40,6 +40,8 @@ var started := false
 var clock := 0.0
 var results: Dictionary = {}
 var results_t := 0.0
+var last_state: Array = []
+var was_animating := false
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
@@ -114,9 +116,16 @@ func _process(dt: float) -> void:
 	seed_pop = maxf(0, seed_pop - dt * 4.0)
 	if started:
 		title = maxf(0, title - dt * 1.4)
-	if not results.is_empty():
+	var animating := title > 0 or action_flash > 0 or roll_flash > 0
+	if not results.is_empty() and results_t < 1.0:
 		results_t = minf(1.0, results_t + dt * 2.2)
-	queue_redraw()
+		animating = true
+	# The HUD is only redrawn when something on it changed.
+	var state := [seeds, snoozles, mode_rolling, airborne and mode_rolling, jump_held, move_id, snappedf(analog, 0.02), anchor, paused, menu, show_debug, music_on, sfx_on, results.is_empty(), size, debug_text if show_debug or menu else ""]
+	if animating or was_animating or state != last_state:
+		last_state = state
+		queue_redraw()
+	was_animating = animating
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventKey and not event.echo:
@@ -214,9 +223,9 @@ func menu_rect(i: int) -> Rect2:
 
 func button(center: Vector2, radius: float, icon: String, lit: float, held: bool) -> void:
 	var grow := 1.0 + lit * 0.12 - (0.05 if held else 0.0)
-	draw_circle(center + Vector2(0, 5), radius * grow, Color(0.16, 0.1, 0.24, 0.35))
-	draw_circle(center, radius * grow, Color(1, 0.965, 0.86, 0.9 if held or lit > 0 else 0.62))
-	draw_arc(center, radius * grow, 0, TAU, 48, Color(Art.INK, 0.85), 3.5, true)
+	Art.disc(self, center + Vector2(0, 5), radius * grow, Color(0.16, 0.1, 0.24, 0.35))
+	Art.disc(self, center, radius * grow, Color(1, 0.965, 0.86, 0.9 if held or lit > 0 else 0.62))
+	Art.arc(self, center, radius * grow, 0, TAU, 48, Color(Art.INK, 0.85), 3.5)
 	Art.icon(self, icon, center, radius / 30.0, Color(Art.INK, 0.9))
 
 func _draw() -> void:
@@ -225,7 +234,7 @@ func _draw() -> void:
 	# Seed and snoozle counters.
 	var chip := Rect2(inset.x, inset.y, 150 + (30 if seeds_total >= 100 else 0), 50)
 	Art.panel(self, chip, 25, Color(1, 0.965, 0.86, 0.88), Color(ink, 0.85), 3)
-	Art.seed_shape(self, chip.position + Vector2(28, 25), 1.15 + seed_pop * 0.5, 0.0)
+	Art.seed_shape(self, chip.position + Vector2(28, 25), 1.15, 0.0)
 	Art.text(self, chip.position + Vector2(52, 34), "%d / %d" % [seeds, seeds_total], 24, ink)
 	for i in snoozles_total:
 		var c := Vector2(chip.end.x + 34 + i * 44, inset.y + 27)
@@ -233,18 +242,18 @@ func _draw() -> void:
 		Art.blob(self, Art.ellipse_points(c, Vector2(15, 14), 0.0, 16), Color("ffe9a8") if got else Color(1, 1, 1, 0.25), Color(ink, 0.85 if got else 0.4), 3)
 		Art.blob(self, PackedVector2Array([c + Vector2(-10, -9), c + Vector2(4, -27), c + Vector2(11, -8)]), Art.TEAL if got else Color(1, 1, 1, 0.25), Color(ink, 0.85 if got else 0.4), 2.5)
 		if got:
-			draw_circle(c + Vector2(-5, 0), 2.2, ink)
-			draw_circle(c + Vector2(5, 0), 2.2, ink)
+			Art.disc(self, c + Vector2(-5, 0), 2.2, ink)
+			Art.disc(self, c + Vector2(5, 0), 2.2, ink)
 	# Pause.
 	var pr := pause_rect()
 	Art.panel(self, pr, 20, Color(1, 0.965, 0.86, 0.75), Color(ink, 0.85), 3)
 	Art.icon(self, "pause", pr.get_center(), 1.0, ink)
 	# Stick.
 	var stick := anchor.clamp(Vector2(inset.x + 70, size.y * 0.35), Vector2(size.x * 0.44, size.y - inset.y - 70)) if move_id >= 0 else Vector2(inset.x + 110, size.y - inset.y - 104)
-	draw_circle(stick, 70, Color(0.16, 0.1, 0.24, 0.2))
-	draw_arc(stick, 70, 0, TAU, 48, Color(1, 0.965, 0.86, 0.7), 3.5, true)
-	draw_circle(stick + Vector2(analog * 46, 0), 30, Color(1, 0.965, 0.86, 0.9 if move_id >= 0 else 0.6))
-	draw_arc(stick + Vector2(analog * 46, 0), 30, 0, TAU, 32, Color(ink, 0.8), 3, true)
+	Art.disc(self, stick, 70, Color(0.16, 0.1, 0.24, 0.2))
+	Art.arc(self, stick, 70, 0, TAU, 48, Color(1, 0.965, 0.86, 0.7), 3.5)
+	Art.disc(self, stick + Vector2(analog * 46, 0), 30, Color(1, 0.965, 0.86, 0.9 if move_id >= 0 else 0.6))
+	Art.arc(self, stick + Vector2(analog * 46, 0), 30, 0, TAU, 32, Color(ink, 0.8), 3)
 	Art.icon(self, "move", stick + Vector2(analog * 46, 0), 0.9, Color(ink, 0.8))
 	# Action buttons.
 	button(jump_center, 64, "jump", 0.0, jump_held)

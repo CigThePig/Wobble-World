@@ -22,7 +22,18 @@ func run() -> void:
 			world.controls.set_pause(true)
 			await get_tree().process_frame
 		await RenderingServer.frame_post_draw
+		print("DRAWS ", item, " ", Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME), " prims ", Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME))
 		get_viewport().get_texture().get_image().save_png("build/shots/%02d.png" % index)
+		if "--breakdown" in OS.get_cmdline_user_args():
+			var groups := {"terrain": world.grounds, "flora": [world.flora, world.flowers], "seeds": [world.seeds], "backdrop": [world.backdrop], "hud": [world.controls], "bloop": [world.bloop], "tinted": get_tree().get_nodes_in_group("tinted")}
+			for key in groups:
+				for node in groups[key]:
+					node.visible = false
+				await get_tree().process_frame
+				await RenderingServer.frame_post_draw
+				print("  without ", key, " ", Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME))
+				for node in groups[key]:
+					node.visible = true
 		if world.controls.paused:
 			world.controls.set_pause(false)
 		index += 1

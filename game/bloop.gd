@@ -429,7 +429,7 @@ func _draw() -> void:
 	var up := Vector2.UP.rotated(face_angle)
 	# Sprout behind the body.
 	var base := c + up * (VR - 3)
-	draw_polyline(Art.curve(base, base + up * 12, tip, 6), ink, 4.0, true)
+	Art.line(self, Art.curve(base, base + up * 12, tip, 6), ink, 4.0)
 	var dir := (tip - base).normalized()
 	for side in [-1.0, 1.0]:
 		var leaf_dir := dir.rotated(side * 0.75)
@@ -448,7 +448,7 @@ func _draw() -> void:
 				foot = hip + Vector2(sin(swing) * facing, cos(swing)) * 31.0
 			foot = hip.lerp(foot, legs)
 			var knee := (hip + foot) * 0.5 + Vector2(facing * 4.0, 0)
-			draw_polyline(Art.curve(hip, knee, foot, 6), ink, 6.0, true)
+			Art.line(self, Art.curve(hip, knee, foot, 6), ink, 6.0)
 			var toe := foot + Vector2(facing * 4.0, -1.5)
 			Art.ellipse(self, toe, Vector2(8.5, 5.0) * (1.25 if kicking else 1.0) * legs, ink, 0.0, 12)
 	# Jelly body.
@@ -461,12 +461,12 @@ func _draw() -> void:
 	var inner := PackedVector2Array()
 	for p in pts:
 		inner.append(mid + (p - mid) * 0.86 + Vector2(-2.5, -3.5))
-	draw_colored_polygon(inner, Art.ORANGE)
+	Art.fill(self, inner, Art.ORANGE, false)
 	Art.ellipse(self, mid + Vector2(-10, -13), Vector2(7.5, 4.5), Art.ORANGE_LIGHT, -0.6, 12)
 	# Freckles make the spin readable.
 	for k in 3:
 		var spot := Vector2.from_angle(face_angle + 2.2 + k * 0.42) * (VR - 8.0 - k % 2 * 4.0)
-		draw_circle(mid + spot, 2.6, Art.ORANGE_DARK)
+		Art.disc(self, mid + spot, 2.6, Art.ORANGE_DARK)
 	# Face.
 	draw_set_transform(mid, face_angle, Vector2.ONE)
 	var gaze := look.rotated(-face_angle)
@@ -476,25 +476,25 @@ func _draw() -> void:
 	for x in [-9.5, 9.5]:
 		Art.ellipse(self, Vector2(x, -5), Vector2(7.6, 9.6 * lid), Art.CREAM, 0.0, 16)
 		if lid > 0.5:
-			draw_circle(Vector2(x, -4.5) + gaze, 3.9, ink)
-			draw_circle(Vector2(x - 1.2, -6.0) + gaze, 1.3, Art.CREAM)
-	draw_circle(Vector2(-18, 5), 4.2, Color(0.93, 0.36, 0.38, 0.55))
-	draw_circle(Vector2(18, 5), 4.2, Color(0.93, 0.36, 0.38, 0.55))
+			Art.disc(self, Vector2(x, -4.5) + gaze, 3.9, ink)
+			Art.disc(self, Vector2(x - 1.2, -6.0) + gaze, 1.3, Art.CREAM)
+	Art.disc(self, Vector2(-18, 5), 4.2, Color(0.93, 0.36, 0.38, 0.55))
+	Art.disc(self, Vector2(18, 5), 4.2, Color(0.93, 0.36, 0.38, 0.55))
 	if pounding:
-		draw_line(Vector2(-6, 9), Vector2(6, 9), ink, 3.0, true)
+		Art.stroke(self, Vector2(-6, 9), Vector2(6, 9), ink, 3.0)
 	elif joy > 0.4:
 		var grin := PackedVector2Array()
 		for i in 9:
 			var a := i * PI / 8.0
 			grin.append(Vector2(cos(a) * 8.0, 5.0 + sin(a) * 8.0 * joy))
 		Art.fill(self, grin, ink)
-		draw_circle(Vector2(0, 10.5), 3.0, Art.PINK)
+		Art.disc(self, Vector2(0, 10.5), 3.0, Art.PINK)
 	elif not grounded and absf(velocity.y) > 260:
 		Art.ellipse(self, Vector2(0, 8), Vector2(3.6, 4.6), ink, 0.0, 12)
 	else:
-		draw_arc(Vector2(0, 5), 6.5, 0.2, PI - 0.2, 12, ink, 2.8, true)
+		Art.arc(self, Vector2(0, 5), 6.5, 0.2, PI - 0.2, 7, ink, 2.8)
 	draw_set_transform(Vector2.ZERO)
 	if debug_draw:
 		draw_arc(Vector2.ZERO, R, 0, TAU, 40, Color.MAGENTA, 1.5)
-		draw_line(Vector2.ZERO, velocity * 0.12, Color.MAGENTA, 2)
-		draw_line(Vector2.ZERO, ground_normal * 40, Color.CYAN if grounded else Color.GRAY, 2)
+		Art.stroke(self, Vector2.ZERO, velocity * 0.12, Color.MAGENTA, 2)
+		Art.stroke(self, Vector2.ZERO, ground_normal * 40, Color.CYAN if grounded else Color.GRAY, 2)

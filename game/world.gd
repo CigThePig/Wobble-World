@@ -170,6 +170,7 @@ func add_mushroom(x: float, angle: float, power: float, width: float) -> void:
 func add_checkpoint(x: float) -> void:
 	var cp := Props.Checkpoint.new()
 	cp.position = Vector2(x, ground_y(x) + 2)
+	cp.world = self
 	cp.add_to_group("tinted")
 	add_child(cp)
 	checkpoints.append(cp)
