@@ -24,7 +24,7 @@ def capture(name):
     return {'orange_pixels':orange,'green_pixels':green,'size':im.size}
 def states():
     return [dict(zip(['x','y','jumps','bounces','roll','rings'],m)) for m in re.findall(r'WOBBLE_STATE x=([-\d.]+) y=([-\d.]+) jumps=(\d+) bounces=(\d+) roll=(\w+) rings=(\d+)',logs())]
-emu=subprocess.Popen([str(sdk/'emulator/emulator'),'-avd','wobble','-no-window','-no-audio','-no-boot-anim','-no-snapshot','-gpu','swiftshader_indirect','-skin','1280x720'],stdout=(out/'emulator.log').open('w'),stderr=subprocess.STDOUT)
+emu=subprocess.Popen([str(sdk/'emulator/emulator'),'-avd','wobble','-no-window','-no-audio','-no-boot-anim','-no-snapshot','-gpu','swangle','-skin','1280x720'],stdout=(out/'emulator.log').open('w'),stderr=subprocess.STDOUT)
 recording=None
 try:
     def booted():
