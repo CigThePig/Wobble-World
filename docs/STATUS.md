@@ -26,7 +26,7 @@ Visually opened: production contact sheets; standing/walking, mode-transition, d
 
 ## Implemented and intentionally deferred
 
-Implemented: authored playground with gentle/steeper slopes, variable-height jump, distinct momentum-based roll, spring, movable box, pinned seesaw, impact bell, recovery spring beneath the gap, expressive vector Bloop, animated flowers/trees/bell, original synthesized audio, two-thumb controls, safe-margin scaling, source-labelled diagnostics and LAB reset/tuning controls. Engine tests use production movement and viewport-routed touch input, with no mock controller.
+Implemented: authored playground with gentle/steeper slopes, variable-height jump, distinct momentum-based roll, spring, movable box, pinned seesaw, impact bell, recovery spring beneath the gap, expressive vector Bloop, animated flowers, friendly trees and a reactive bell, original synthesized audio, two-thumb controls, safe-margin scaling, source-labelled diagnostics and LAB reset/tuning controls. Engine tests use production movement and viewport-routed touch input, with no mock controller.
 
 The character's circle controller and explicit toy impulses are arcade approximations. Phone feedback should guide collision weight, rebound, camera motion, button reach and tuning. There are no companions, soft body, campaign, progression saves or local phone trace export in this milestone. LAB changes are session-only. Pair its mode/velocity/grounded/source display with Samsung Screen recorder.
 
