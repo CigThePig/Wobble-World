@@ -16,6 +16,7 @@ window/handheld/orientation=0
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
 environment/defaults/default_clear_color=Color(0.68,0.87,0.84,1)
+textures/vram_compression/import_etc2_astc=true
 [textures]
 default_filters/use_nearest_mipmap_filter=false
 [input_devices]

@@ -33,4 +33,5 @@ func _process(_dt: float) -> void:
 
 func _exit_tree() -> void:
 	player.stop()
+	player.stream = null
 	playback = null

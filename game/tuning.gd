@@ -14,3 +14,4 @@ class_name BloopTuning
 @export var coyote_time: float = 0.11
 @export var jump_buffer: float = 0.13
 @export var jump_cut: float = 0.44
+@export var push_force: float = 1600.0

@@ -79,7 +79,9 @@ func _physics_process(dt: float) -> void:
 		var hit := get_slide_collision(i)
 		var body := hit.get_collider()
 		if body is RigidBody2D:
-			body.apply_impulse(Vector2(incoming.x * 0.11, -20), hit.get_position() - body.global_position)
+			var load_y: float = tuning.gravity * dt * 1.1 if hit.get_normal().y < -0.5 else 0.0
+			var push_x: float = axis * tuning.push_force * dt if absf(hit.get_normal().x) > 0.5 else incoming.x * 0.03
+			body.apply_impulse(Vector2(push_x, load_y), hit.get_position() - body.global_position)
 			if absf(incoming.x) > 80:
 				pushes += 1
 		if rolling and absf(hit.get_normal().x) > 0.8 and absf(incoming.x) > 180:

@@ -9,6 +9,7 @@ var sound: Node
 var box: RigidBody2D
 var seesaw: RigidBody2D
 var spring: Area2D
+var rescue_spring: Area2D
 var bell: Area2D
 var bell_rings := 0
 var bell_flash := 0.0
@@ -55,6 +56,7 @@ func _ready() -> void:
 	camera.position = Vector2(640,350)
 	add_child(camera)
 	spring = area(Vector2(1510,623), Vector2(125,30))
+	rescue_spring = area(Vector2(2185,743), Vector2(128,30))
 	bell = area(Vector2(3130,310), Vector2(84,90))
 	reset_toys()
 	print("WOBBLE_READY source=", source)
@@ -102,6 +104,8 @@ func reset_toys() -> void:
 	pin.angular_limit_enabled = true
 	pin.angular_limit_lower = -0.26
 	pin.angular_limit_upper = 0.26
+	box.freeze = controls.paused
+	seesaw.freeze = controls.paused
 
 func on_command(action: String) -> void:
 	match action:
@@ -126,7 +130,7 @@ func _physics_process(dt: float) -> void:
 		clock += dt
 		bell_flash = maxf(0, bell_flash - dt)
 		bell_cooldown = maxf(0, bell_cooldown - dt)
-		if spring.overlaps_body(bloop) and bloop.velocity.y >= 0:
+		if (spring.overlaps_body(bloop) or rescue_spring.overlaps_body(bloop)) and bloop.velocity.y >= 0:
 			bloop.launch()
 		for body in bell.get_overlapping_bodies():
 			var speed: float = body.velocity.length() if body is CharacterBody2D else body.linear_velocity.length() if body is RigidBody2D else 0.0
@@ -187,7 +191,7 @@ func _draw() -> void:
 	label(Vector2(115,370), "Meet Bloop.", 40)
 	label(Vector2(115,404), "Little legs. Big downhill ideas.", 21)
 	label(Vector2(675,315), "LEGS UP? ROLL ON.", 23)
-	label(Vector2(1380,745), "THE BOING PATCH", 23)
+	label(Vector2(1380,545), "THE BOING PATCH", 23)
 	label(Vector2(1840,400), "A BOX WITH PLACES TO BE", 20)
 	label(Vector2(2310,375), "A LITTLE WEIGHT GOES A LONG WAY", 18)
 	label(Vector2(2980,160), "WAKE THE BELL", 29)
@@ -197,6 +201,10 @@ func _draw() -> void:
 	draw_style_box(Controls.panel(Color("d99fc4")),Rect2(1445,605,130,17))
 	for i in 5:
 		draw_circle(Vector2(1460+i*24,610),4,Color("fff9dc"))
+	# Recovery mushroom in the gap: experiment without a death pit.
+	draw_style_box(Controls.panel(Color("d99fc4")),Rect2(2125,728,120,20))
+	for i in 5:
+		draw_circle(Vector2(2138+i*23,735),4,Color("fff9dc"))
 	# Seesaw fulcrum.
 	draw_colored_polygon(PackedVector2Array([Vector2(2448,518),Vector2(2480,477),Vector2(2512,518)]),Color("7b9790"))
 	# Bell arch and reactive face.

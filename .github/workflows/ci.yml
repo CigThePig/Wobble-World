@@ -20,7 +20,7 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - run: bash tools/install-godot.sh
-      - run: python3 -m pip install Pillow==11.3.0
+      - run: python3 -m pip install Pillow==11.3.0 imageio-ffmpeg==0.6.0
       - run: git rev-parse HEAD > game/build-source.txt
       - run: python3 tools/verify.py
       - run: xvfb-run -a -s '-screen 0 2560x1440x24' python3 tools/gameplay-verify.py
