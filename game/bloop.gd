@@ -9,10 +9,14 @@ const R := 27.0
 const VR := 25.5
 const N := 28
 const KICK_TIME := 0.32
-# Presentation only: the bean rises on long legs; the circular physics collider stays put.
-const LEG_BODY_LIFT := 49.0
-const LEG_HIP_DROP := 19.0
-const LEG_KICK_REACH := 56.0
+# Presentation only: the bean rises on thin noodle legs; the circular physics collider stays put.
+const LEG_BODY_LIFT := 40.0
+const LEG_HIP_DROP := 17.0
+const LEG_KICK_REACH := 46.0
+# Rest length of a leg. Whenever hip and foot are closer than this the leg bows
+# forward like a rubber hose instead of folding at a knee.
+const LEG_LENGTH := 52.0
+const LEG_WIDTH := 5.0
 
 var tuning = preload("res://game/tuning.tres").duplicate()
 var controls: Node
@@ -416,6 +420,17 @@ func body_center() -> Vector2:
 		bob = sin(clock * 16.0) * minf(absf(velocity.x) / 120.0, 2.2)
 	return Vector2(0, -LEG_BODY_LIFT * legs + bob * legs)
 
+# A round-topped shoe with a flat sole: the toe is fuller than the heel.
+func draw_shoe(sole: Vector2, up: Vector2, forward: Vector2, size: float, ink: Color) -> void:
+	var pts := PackedVector2Array()
+	var steps := 14
+	for k in steps + 1:
+		var a := PI * k / steps
+		var along := cos(a) * (10.0 if k <= steps / 2 else 6.5)
+		pts.append(sole + (forward * (along + 2.5) + up * (sin(a) * 8.0 + 0.5)) * size)
+	Art.fill(self, pts, ink)
+	Art.ellipse(self, sole + (forward * 5.5 + up * 5.0) * size, Vector2(2.6, 1.4) * size, Color(Art.LILAC, 0.55), forward.angle() - 0.35, 10)
+
 func outline_points(c: Vector2) -> PackedVector2Array:
 	var pts := PackedVector2Array()
 	pts.resize(N)
@@ -448,15 +463,15 @@ func _draw() -> void:
 		var leaf_dir := dir.rotated(side * 0.75)
 		var leaf := Art.ellipse_points(tip + leaf_dir * 8.0, Vector2(10.0, 5.0) * (1.0 if side > 0 else 0.8), leaf_dir.angle(), 12)
 		Art.blob(self, leaf, Art.GRASS_LIGHT if side > 0 else Art.GRASS, ink, 2.6)
-	# Pikuniku-like silhouette: long, body-coloured jointed legs and simple
-	# paddle feet, not dark short sticks. All geometry is cosmetic.
+	# Pikuniku-like silhouette: thin, dark, kneeless noodle legs that bow
+	# smoothly, ending in chunky round shoes. All geometry is cosmetic.
 	if legs > 0.03:
 		var n := ground_normal if grounded else Vector2.UP
 		var tangent := Vector2(-n.y, n.x)
-		var contact := global_position - n * R
+		var shoes := []
 		for i in 2:
 			var side := -1.0 if i == 0 else 1.0
-			var hip := c + Vector2(side * 10.0, LEG_HIP_DROP)
+			var hip := c + Vector2(side * 8.0, LEG_HIP_DROP)
 			var foot: Vector2 = feet[i].pos - global_position
 			var kicking := kick_t > 0 and side == facing
 			if kicking:
@@ -464,19 +479,26 @@ func _draw() -> void:
 				var swing := lerpf(-0.7, 1.75, smoothstep(0.0, 0.4, p)) if p < 0.55 else lerpf(1.75, 0.0, smoothstep(0.55, 1.0, p))
 				foot = hip + Vector2(sin(swing) * facing, cos(swing)) * LEG_KICK_REACH
 			foot = hip.lerp(foot, legs)
-			var lift := maxf(0.0, (feet[i].pos - contact).dot(n)) if grounded else 5.0
-			var knee := hip.lerp(foot, 0.48) + Vector2(side * 3.0 - clampf(velocity.x * 0.02, -6.0, 6.0) - (facing * lift * 0.4), -3.0 - lift * 0.18)
-			if kicking:
-				knee += Vector2(-facing * 8.0, -7.0)
-			var shape := PackedVector2Array([hip, knee, foot])
-			Art.line(self, shape, ink, 10.0 * legs)
-			Art.line(self, shape, Art.ORANGE, 7.5 * legs)
 			var toe_direction := facing if absf(velocity.x) > 24.0 or kicking else side
-			var sole := foot + tangent * toe_direction * (9.0 if kicking else 6.5) + n * 0.5
-			var angle := tangent.angle() if not kicking else (foot - hip).angle() - PI * 0.5
-			var foot_size := Vector2(11.0 if kicking else 10.0, 5.3) * legs
-			Art.ellipse(self, sole, foot_size, ink, angle, 12)
-			Art.ellipse(self, sole, foot_size - Vector2(1.7, 1.4) * legs, Art.ORANGE, angle, 12)
+			# The shoe sits flat on the ground, or points its sole along the kick.
+			var shoe_up := n
+			if kicking:
+				shoe_up = (hip - foot).normalized()
+			var forward := shoe_up.rotated(PI * 0.5 * toe_direction)
+			var ankle := foot + shoe_up * 5.0 * legs
+			# Bow the hose by however much slack it has, knees towards the front.
+			var chord := ankle - hip
+			var reach := chord.length()
+			var bend := Vector2(chord.y, -chord.x).normalized()
+			if bend.x * facing < 0.0:
+				bend = -bend
+			var slack := sqrt(maxf(0.0, LEG_LENGTH * LEG_LENGTH * legs * legs - reach * reach)) * 0.36
+			slack = minf(slack, 9.0) + clampf(-velocity.x * facing * 0.006, -3.0, 3.0) * legs
+			var mid := hip.lerp(ankle, 0.5) + bend * slack * 2.0
+			Art.line(self, Art.curve(hip, mid, ankle, 10), ink, LEG_WIDTH * legs)
+			shoes.append([foot, shoe_up, forward, 1.3 if kicking else 1.18])
+		for shoe in shoes:
+			draw_shoe(shoe[0], shoe[1], shoe[2], shoe[3] * legs, ink)
 	# Jelly body.
 	var pts := outline_points(c)
 	var mid := Vector2.ZERO

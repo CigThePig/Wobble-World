@@ -223,10 +223,14 @@ static func icon(ci: CanvasItem, kind: String, c: Vector2, s: float, color: Colo
 			fill(ci, PackedVector2Array([tip + Vector2(-8, -3) * s, tip + Vector2(6, -6) * s, tip + Vector2(1, 8) * s]), color, false)
 		"legs":
 			disc(ci, c + Vector2(0, -6) * s, 9 * s, color)
-			stroke(ci, c + Vector2(-5, 2) * s, c + Vector2(-7, 14) * s, color, 4.5 * s)
-			stroke(ci, c + Vector2(5, 2) * s, c + Vector2(7, 14) * s, color, 4.5 * s)
-			stroke(ci, c + Vector2(-7, 14) * s, c + Vector2(-12, 14) * s, color, 4.5 * s)
-			stroke(ci, c + Vector2(7, 14) * s, c + Vector2(12, 14) * s, color, 4.5 * s)
+			# Bowed noodle legs and round shoes, matching Bloop.
+			line(ci, curve(c + Vector2(-4, 2) * s, c + Vector2(-1, 8) * s, c + Vector2(-6, 13) * s, 6), color, 3.5 * s)
+			line(ci, curve(c + Vector2(4, 2) * s, c + Vector2(7, 8) * s, c + Vector2(6, 13) * s, 6), color, 3.5 * s)
+			for side in [-1.0, 1.0]:
+				var shoe := PackedVector2Array()
+				for k in 9:
+					shoe.append(c + Vector2(side * 6 + 1.5 + cos(PI * k / 8) * 4.5, 16 - sin(PI * k / 8) * 4) * s)
+				fill(ci, shoe, color, false)
 		"kick":
 			stroke(ci, c + Vector2(-12, -12) * s, c + Vector2(-4, 4) * s, color, 6 * s)
 			stroke(ci, c + Vector2(-4, 4) * s, c + Vector2(9, 4) * s, color, 7 * s)
