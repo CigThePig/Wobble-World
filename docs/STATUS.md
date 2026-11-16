@@ -17,7 +17,7 @@ PR #1 now carries a rebuilt game rather than the original movement test. The rep
 
 ## Polish pass
 
-- Bloop's legs no longer stretch into string on fast launches, and end in small teal boots.
+- Bloop's legs were redrawn and re-animated: smooth constant-length limbs with bending knees, a distance-driven walk cycle, air poses, a wind-up kick and teal boots. They replace the kinked sticks that crossed while walking and stretched on launches.
 - The results card counts its numbers up, has an icon per row, and compares the run with saved records ("NEW BEST" or the record to beat). A full clear gets its own line.
 - Music, sound and the new vibration toggle are remembered between sessions.
 - Short vibration on impacts (Android only).
