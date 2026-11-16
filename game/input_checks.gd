@@ -1,0 +1,59 @@
+extends SceneTree
+var controls: Control
+func _initialize() -> void:
+	call_deferred("checks")
+func check(value: bool, message: String) -> void:
+	if not value:
+		push_error(message)
+		quit(1)
+func checks() -> void:
+	controls = preload("res://game/controls.gd").new()
+	root.add_child(controls)
+	for dimensions in [Vector2i(1280,800),Vector2i(1280,720),Vector2i(1920,864),Vector2i(2340,1080),Vector2i(1024,768)]:
+		root.size = dimensions
+		await process_frame
+		controls.layout()
+		check(controls.jump_center.x+64 < controls.size.x, "jump outside display")
+		check(controls.jump_center.y+64 < controls.size.y, "jump outside display")
+		check(controls.roll_center.distance_to(controls.jump_center)>124, "overlapping action targets")
+		check(controls.action_center.distance_to(controls.jump_center)>122 and controls.action_center.distance_to(controls.roll_center)>110, "overlapping action targets")
+		check(controls.action_center.y-54 > 0 and controls.roll_center.y+56 < controls.size.y, "action outside display")
+	controls.press(6,Vector2(40,controls.size.y-80))
+	check(controls.axis()==0 and controls.anchor.x==40, "edge contact must establish a neutral anchor")
+	controls.release(6)
+	controls.press(7,Vector2(170,controls.size.y-150))
+	controls.press(8,controls.jump_center)
+	check(controls.owners.size()==2 and controls.jump_held, "two finger ownership")
+	controls.press(8,controls.roll_center)
+	check(not controls.take_roll(), "same finger dispatched twice")
+	controls.press(9,controls.roll_center)
+	check(controls.take_roll() and controls.move_id==7, "roll while moving")
+	controls.press(11,controls.action_center)
+	check(controls.take_action() and controls.jump_held and controls.move_id==7 and controls.owners.size()==4, "action while moving and jumping")
+	controls.release(11)
+	controls.release(9)
+	controls.release(8)
+	check(not controls.jump_held and controls.move_id==7, "independent action release")
+	controls.release(7)
+	check(controls.axis()==0 and controls.move_id==-1, "movement release")
+	controls.press(8,controls.jump_center)
+	controls.press(10,controls.jump_center)
+	check(not controls.owners.has(10), "jump must have one owner")
+	controls.set_pause(true)
+	check(controls.owners.is_empty() and not controls.jump_held and not controls.take_jump() and not controls.take_action(), "pause cancellation")
+	controls.set_pause(false)
+	controls.press(7,Vector2(170,controls.size.y-150))
+	controls.notification(NOTIFICATION_APPLICATION_PAUSED)
+	check(controls.paused and controls.owners.is_empty(), "background cancellation")
+	# A pause over the results card must leave the pause menu usable.
+	controls.set_pause(false)
+	controls.show_results({"seeds":1,"seeds_total":2,"snoozles":0,"snoozles_total":3,"time":1.0})
+	controls.results_t = 1.0
+	controls.notification(NOTIFICATION_APPLICATION_FOCUS_OUT)
+	check(controls.paused, "focus loss over results")
+	controls.press(12,controls.menu_rect(0).get_center())
+	check(not controls.paused and not controls.results.is_empty(), "resume over results card")
+	controls.press(13,controls.results_rect(1).get_center())
+	check(controls.results.is_empty(), "results card dismiss")
+	print("INPUT_CHECKS_PASSED")
+	quit()

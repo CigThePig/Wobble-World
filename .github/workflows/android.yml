@@ -1,0 +1,106 @@
+name: Android playable APK
+on:
+  pull_request:
+    paths-ignore: ['docs/**', '*.md']
+  push:
+    branches: [main]
+    paths-ignore: ['docs/**', '*.md']
+  workflow_dispatch:
+    inputs:
+      emulator:
+        description: Run Android emulator smoke test
+        type: boolean
+        default: true
+permissions:
+  contents: read
+concurrency:
+  group: android-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  apk:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3
+        with:
+          distribution: temurin
+          java-version: '17'
+      - run: bash tools/install-godot.sh templates
+      - name: Android tools
+        run: |
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'platform-tools' 'platforms;android-35' 'build-tools;35.0.1'
+          echo "$ANDROID_HOME/build-tools/35.0.1" >> "$GITHUB_PATH"
+      - run: git rev-parse HEAD > game/build-source.txt
+      - run: python3 tools/verify.py
+      - name: Configure private or temporary debug signing
+        env:
+          DEV_KEYSTORE: ${{ secrets.ANDROID_DEV_KEYSTORE_BASE64 }}
+          DEV_ALIAS: ${{ secrets.ANDROID_DEV_KEYSTORE_ALIAS }}
+          DEV_PASSWORD: ${{ secrets.ANDROID_DEV_KEYSTORE_PASSWORD }}
+        run: python3 tools/configure-android.py
+      - name: Export and validate ARM64 phone APK
+        env:
+          GODOT_ANDROID_KEYSTORE_DEBUG_USER: ${{ secrets.ANDROID_DEV_KEYSTORE_BASE64 != '' && secrets.ANDROID_DEV_KEYSTORE_ALIAS || 'androiddebugkey' }}
+          GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD: ${{ secrets.ANDROID_DEV_KEYSTORE_BASE64 != '' && secrets.ANDROID_DEV_KEYSTORE_PASSWORD || 'android' }}
+        run: |
+          mkdir -p build/android
+          sha=$(git rev-parse --short=12 HEAD)
+          echo "APK_NAME=WobbleWorld-android-arm64-debug-$sha" >> "$GITHUB_ENV"
+          "$GODOT" --headless --path . --export-debug Android "build/android/WobbleWorld-android-arm64-debug-$sha.apk" 2>&1 | tee build/android/export.log
+          python3 tools/verify-apk.py "build/android/WobbleWorld-android-arm64-debug-$sha.apk"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: ${{ env.APK_NAME }}
+          path: build/android/
+          if-no-files-found: error
+          retention-days: 30
+      - name: Export matching emulator APK
+        env:
+          GODOT_ANDROID_KEYSTORE_DEBUG_USER: ${{ secrets.ANDROID_DEV_KEYSTORE_BASE64 != '' && secrets.ANDROID_DEV_KEYSTORE_ALIAS || 'androiddebugkey' }}
+          GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD: ${{ secrets.ANDROID_DEV_KEYSTORE_BASE64 != '' && secrets.ANDROID_DEV_KEYSTORE_PASSWORD || 'android' }}
+        run: |
+          sed -i 's@architectures/arm64-v8a=true@architectures/arm64-v8a=false@;s@architectures/x86_64=false@architectures/x86_64=true@' export_presets.cfg
+          "$GODOT" --headless --path . --export-debug Android build/emulator.apk
+          python3 tools/verify-apk.py build/emulator.apk --emulator
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: emulator-package
+          path: build/emulator.apk
+          retention-days: 3
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: failure()
+        with:
+          name: android-build-diagnostics
+          path: build/
+  emulator:
+    needs: apk
+    if: github.event_name != 'workflow_dispatch' || inputs.emulator
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      ANDROID_AVD_HOME: /tmp/wobble-avds
+      ANDROID_USER_HOME: /tmp/wobble-android
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: emulator-package
+          path: build/
+      - run: |
+          mkdir -p "$ANDROID_AVD_HOME" "$ANDROID_USER_HOME"
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'platform-tools' 'emulator' 'system-images;android-35;google_apis;x86_64'
+          printf 'no\n' | "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd --force --name wobble --package 'system-images;android-35;google_apis;x86_64'
+          sudo chmod 666 /dev/kvm
+      - run: python3 -m pip install Pillow==11.3.0
+      - run: python3 tools/android-smoke.py build/emulator.apk
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: android-runtime-evidence
+          path: build/android-runtime/
+          retention-days: 14
