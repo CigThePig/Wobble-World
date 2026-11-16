@@ -13,6 +13,7 @@ const KICK_TIME := 0.32
 const LEG_BODY_LIFT := 49.0
 const LEG_HIP_DROP := 19.0
 const LEG_KICK_REACH := 56.0
+const LEG_MAX_REACH := 72.0
 
 var tuning = preload("res://game/tuning.tres").duplicate()
 var controls: Node
@@ -448,8 +449,8 @@ func _draw() -> void:
 		var leaf_dir := dir.rotated(side * 0.75)
 		var leaf := Art.ellipse_points(tip + leaf_dir * 8.0, Vector2(10.0, 5.0) * (1.0 if side > 0 else 0.8), leaf_dir.angle(), 12)
 		Art.blob(self, leaf, Art.GRASS_LIGHT if side > 0 else Art.GRASS, ink, 2.6)
-	# Pikuniku-like silhouette: long, body-coloured jointed legs and simple
-	# paddle feet, not dark short sticks. All geometry is cosmetic.
+	# Long jointed jelly legs ending in little teal boots (the same teal as the
+	# snoozles' nightcaps). All geometry is cosmetic.
 	if legs > 0.03:
 		var n := ground_normal if grounded else Vector2.UP
 		var tangent := Vector2(-n.y, n.x)
@@ -464,6 +465,8 @@ func _draw() -> void:
 				var swing := lerpf(-0.7, 1.75, smoothstep(0.0, 0.4, p)) if p < 0.55 else lerpf(1.75, 0.0, smoothstep(0.55, 1.0, p))
 				foot = hip + Vector2(sin(swing) * facing, cos(swing)) * LEG_KICK_REACH
 			foot = hip.lerp(foot, legs)
+			# Feet trail in world space; cap the stretch so fast launches don't turn legs into string.
+			foot = hip + (foot - hip).limit_length(LEG_MAX_REACH)
 			var lift := maxf(0.0, (feet[i].pos - contact).dot(n)) if grounded else 5.0
 			var knee := hip.lerp(foot, 0.48) + Vector2(side * 3.0 - clampf(velocity.x * 0.02, -6.0, 6.0) - (facing * lift * 0.4), -3.0 - lift * 0.18)
 			if kicking:
@@ -474,9 +477,10 @@ func _draw() -> void:
 			var toe_direction := facing if absf(velocity.x) > 24.0 or kicking else side
 			var sole := foot + tangent * toe_direction * (9.0 if kicking else 6.5) + n * 0.5
 			var angle := tangent.angle() if not kicking else (foot - hip).angle() - PI * 0.5
-			var foot_size := Vector2(11.0 if kicking else 10.0, 5.3) * legs
+			var foot_size := Vector2(12.0 if kicking else 11.0, 6.0) * legs
 			Art.ellipse(self, sole, foot_size, ink, angle, 12)
-			Art.ellipse(self, sole, foot_size - Vector2(1.7, 1.4) * legs, Art.ORANGE, angle, 12)
+			Art.ellipse(self, sole, foot_size - Vector2(1.7, 1.4) * legs, Art.TEAL, angle, 12)
+			Art.ellipse(self, sole - n * 1.4 * legs, foot_size - Vector2(5.0, 3.6) * legs, Art.TEAL.lightened(0.35), angle, 8)
 	# Jelly body.
 	var pts := outline_points(c)
 	var mid := Vector2.ZERO

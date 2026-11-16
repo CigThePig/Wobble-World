@@ -15,6 +15,16 @@ PR #1 now carries a rebuilt game rather than the original movement test. The rep
 | Debug text HUD | Icon buttons, seed and snoozle counters, live title card, pause menu, results card |
 | 14 movement scenarios | 17 scenarios plus a bot that must finish the whole level |
 
+## Polish pass
+
+- Bloop's legs no longer stretch into string on fast launches, and end in small teal boots.
+- The results card counts its numbers up, has an icon per row, and compares the run with saved records ("NEW BEST" or the record to beat). A full clear gets its own line.
+- Music, sound and the new vibration toggle are remembered between sessions.
+- Short vibration on impacts (Android only).
+- Pause menu: full-width Resume, lab buttons tinted as their own group, and it now replaces the results card instead of drawing over it.
+- The seed counter pops on each pickup.
+- The camera shows only a sliver of the cliffs at either end of the level, so the title screen is no longer a third blank wall.
+
 ## Verified locally on this revision
 
 | Check | Result |
@@ -30,7 +40,8 @@ Frames opened and inspected by eye: title, pause menu and results card at the S2
 ## Known limits
 
 - Nobody has played this with thumbs yet. Speeds, camera zoom and button reach are first guesses backed only by a bot finishing the level.
-- One level. No saves; best times and seed counts are not kept.
+- One level. Settings and personal records are saved; progress within a run is not.
+- Vibration has never run on a real motor. The durations (14 to 60 ms) are guesses, and the emulator cannot show whether they feel right. It can be turned off in the pause menu.
 - Music and effects were checked for generating and playing without errors, not listened to.
 - Rigid toys are simple: the crate and ball respawn at home if they leave the yard or fall in the pit.
 - The emulator smoke only walks right, jumps, toggles roll and reaches the first mushroom; it does not play the level.

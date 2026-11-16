@@ -51,6 +51,12 @@ var cam_look := Vector2.ZERO
 var cam_zoom := 1.15
 var shake := 0.0
 var dust_t := 0.0
+# Settings and personal bests persist between sessions. Any command-line mode
+# (replays, captures, layout checks) leaves the save untouched.
+const SAVE_PATH := "user://wobble.cfg"
+var save := ConfigFile.new()
+var persist := false
+var haptics_on := true
 
 func _ready() -> void:
 	if FileAccess.file_exists("res://game/build-source.txt"):
@@ -104,6 +110,14 @@ func _ready() -> void:
 	sound.process_mode = Node.PROCESS_MODE_ALWAYS
 	sound.with_music = not testing or "--music" in OS.get_cmdline_user_args()
 	add_child(sound)
+	persist = OS.get_cmdline_user_args().is_empty()
+	if persist and save.load(SAVE_PATH) == OK:
+		sound.music_on = bool(save.get_value("settings", "music", true))
+		sound.sfx_on = bool(save.get_value("settings", "sfx", true))
+		haptics_on = bool(save.get_value("settings", "haptics", true))
+	controls.music_on = sound.music_on
+	controls.sfx_on = sound.sfx_on
+	controls.haptics_on = haptics_on
 	bloop.event.connect(on_event)
 	camera = Camera2D.new()
 	camera.process_callback = Camera2D.CAMERA2D_PROCESS_PHYSICS
@@ -273,6 +287,31 @@ func scatter_flora() -> void:
 
 # ---- Interactions ----
 
+func buzz(ms: int) -> void:
+	# A short tap from the phone's motor on the moments that should have weight.
+	if haptics_on and OS.get_name() == "Android":
+		Input.vibrate_handheld(ms)
+
+func store() -> void:
+	if not persist:
+		return
+	save.set_value("settings", "music", sound.music_on)
+	save.set_value("settings", "sfx", sound.sfx_on)
+	save.set_value("settings", "haptics", haptics_on)
+	save.save(SAVE_PATH)
+
+func finish_run() -> void:
+	# Each stat keeps its own record: most seeds, most snoozles, quickest time.
+	var best := {}
+	for key in ["seeds", "snoozles", "time"]:
+		if save.has_section_key("best", key):
+			best[key] = save.get_value("best", key)
+	controls.show_results({"seeds": seeds_got, "seeds_total": seeds.spots.size(), "snoozles": snoozles_got, "snoozles_total": snoozles.size(), "time": play_time, "best": best})
+	save.set_value("best", "seeds", maxi(seeds_got, int(best.get("seeds", 0))))
+	save.set_value("best", "snoozles", maxi(snoozles_got, int(best.get("snoozles", 0))))
+	save.set_value("best", "time", minf(play_time, float(best.get("time", play_time))))
+	store()
+
 func set_day(value: float) -> void:
 	day = value
 	backdrop.day = value
@@ -305,12 +344,14 @@ func kick_at(at: Vector2, dir: float) -> void:
 		sound.chirp("thwack")
 		fx.burst("star", at, 6)
 		shake = maxf(shake, 5.0)
+		buzz(18)
 		print("WOBBLE_EVENT thwack")
 
 func pound_at(at: Vector2) -> void:
 	fx.burst("ring", at, 1, Vector2.UP, 1.3)
 	fx.burst("dust", at, 12, Vector2.UP, 1.8)
 	shake = maxf(shake, 13.0)
+	buzz(45)
 	for toy in toys:
 		var away: Vector2 = toy.global_position - at
 		if away.length() < 210:
@@ -329,6 +370,7 @@ func ring_bell() -> void:
 	bell_rings += 1
 	sound.chirp("bell", 1.0, -6.0)
 	shake = maxf(shake, 9.0)
+	buzz(60)
 	fx.burst("ring", bell.bell_point(), 1, Vector2.UP, 2.0)
 	fx.burst("spark", bell.bell_point(), 14, Vector2.UP, 1.5)
 	print("WOBBLE_EVENT bell rings=", bell_rings)
@@ -350,6 +392,7 @@ func fall_in(wet: bool) -> void:
 	if wet:
 		fx.burst("splash", Vector2(bloop.position.x, Level.POND.position.y), 16)
 	sound.chirp("splash")
+	buzz(50)
 	print("WOBBLE_EVENT splash")
 
 func teleport(at: Vector2) -> void:
@@ -373,15 +416,18 @@ func on_event(kind: String) -> void:
 			fx.burst("dust", bloop.position - bloop.ground_normal * Bloop.R, 3 + int(bloop.last_impact / 220.0))
 			if bloop.last_impact > 800:
 				shake = maxf(shake, 5.0)
+				buzz(14)
 		"bump":
 			fx.burst("star", bloop.position, 4)
 			shake = maxf(shake, 4.0)
+			buzz(14)
 		"roll", "walk":
 			fx.burst("ring", bloop.position, 1, Vector2.UP, 0.7)
 		"boost":
 			fx.burst("dust", feet, 9, Vector2(-bloop.facing, -0.3), 1.6)
 		"spring":
 			fx.burst("spark", feet, 7)
+			buzz(16)
 	sound.chirp(kind, 1.0, volume)
 	print("WOBBLE_EVENT ", kind)
 
@@ -396,9 +442,16 @@ func on_command(action: String) -> void:
 		"music":
 			sound.music_on = not sound.music_on
 			controls.music_on = sound.music_on
+			store()
 		"sfx":
 			sound.sfx_on = not sound.sfx_on
 			controls.sfx_on = sound.sfx_on
+			store()
+		"haptics":
+			haptics_on = not haptics_on
+			controls.haptics_on = haptics_on
+			store()
+			buzz(30)
 		"debug":
 			bloop.debug_draw = not bloop.debug_draw
 			controls.show_debug = bloop.debug_draw
@@ -474,6 +527,7 @@ func _physics_process(dt: float) -> void:
 				sound.chirp("gate", 1.0, -8.0)
 				sound.chirp("check")
 				shake = maxf(shake, 8.0)
+				buzz(40)
 				print("WOBBLE_EVENT gate")
 	for toy in toys:
 		if toy.position.y > 520 or toy.position.x < 4960 or toy.position.x > 6560:
@@ -500,7 +554,7 @@ func _physics_process(dt: float) -> void:
 			fx.burst("confetti", camera.position + Vector2(randf_range(-500, 500), 380), 6, Vector2.UP, 1.35)
 		if awake_t > 5.5 and not results_shown:
 			results_shown = true
-			controls.show_results({"seeds": seeds_got, "seeds_total": seeds.spots.size(), "snoozles": snoozles_got, "snoozles_total": snoozles.size(), "time": play_time})
+			finish_run()
 	sound.roll_level = move_toward(sound.roll_level, clampf(speed / 900.0, 0.0, 1.0) if bloop.rolling and bloop.grounded and not bloop.frozen else 0.0, dt * 5.0)
 	update_camera(dt, speed)
 	update_hud()
@@ -521,7 +575,8 @@ func update_camera(dt: float, speed: float) -> void:
 		zoom_target = 0.9
 	cam_zoom = lerpf(cam_zoom, zoom_target, 0.03 if zoom_target < cam_zoom else 0.012)
 	var half := view * 0.5 / cam_zoom
-	cam_pos.x = clampf(cam_pos.x, Level.LEFT - 260 + half.x, Level.RIGHT + 260 - half.x)
+	# Only a sliver of the boundary cliffs is ever on screen.
+	cam_pos.x = clampf(cam_pos.x, Level.LEFT - 70 + half.x, Level.RIGHT + 70 - half.x)
 	cam_pos.y = minf(cam_pos.y, 1330.0 - half.y)
 	shake = maxf(0, shake - dt * 40.0)
 	camera.position = cam_pos + Vector2(randf_range(-1, 1), randf_range(-1, 1)) * shake

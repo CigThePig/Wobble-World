@@ -38,6 +38,8 @@ The body is a 28-point outline. A single squash spring compresses along the cont
 
 Dawn is a tint on nodes in the `tinted` group plus the backdrop's own palette blend. Bloop, seeds and effects stay untinted so they glow against it. Ringing the bell animates `day` from 0 to 1.
 
+Settings (music, sound, vibration) and the three records (most seeds, most snoozles, quickest time) live in `user://wobble.cfg`, read and written by `world.gd`. Any command-line mode (`--replay`, `--shots`, `--layout-check`) neither reads nor writes it, so tests and captures always start clean. On Android, `world.buzz` gives a short vibration on kicks that connect, slams, mushrooms, hard landings, the gate, the pond and the bell; the export preset carries the `VIBRATE` permission for it.
+
 Pausing uses the scene tree's pause; the HUD layer, sound and replay nodes keep processing. Backgrounding or focus loss clears all input and opens the pause menu.
 
 ### Input
@@ -54,7 +56,7 @@ A floating left anchor accepts one movement owner; jump has one held owner; roll
 
 Any engine or script error fails the run. The bot reads world state to decide what to press, but everything it does goes through the same touch events a thumb would produce. Scenario fixtures teleport Bloop at boundaries; world state (gate, floor, seeds) deliberately carries across scenarios.
 
-`tools/gameplay-verify.py` records both replays with Godot Movie Maker at a fixed 60 Hz, transcodes to MP4, saves labelled stills and builds `contact-sheet.jpg` and `full-run-sheet.jpg`. `tools/layout-verify.py` captures the five window sizes. `--shots=x:y[:flags];...` (see `dev_shots.gd`) saves arbitrary frames for visual checks.
+`tools/gameplay-verify.py` records both replays with Godot Movie Maker at a fixed 60 Hz, transcodes to MP4, saves labelled stills and builds `contact-sheet.jpg` and `full-run-sheet.jpg`. `tools/layout-verify.py` captures the five window sizes. `--shots=x:y[:flags];...` (see `dev_shots.gd` for the flags) saves arbitrary frames for visual checks.
 
 Movie frames are real renderer output on a fixed clock, not a performance measurement. Tests establish that the level works and can be finished. They say nothing about whether it feels good in the hand.
 

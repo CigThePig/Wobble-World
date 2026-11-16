@@ -32,7 +32,7 @@ Hold **Jump** as you land on a mushroom for a bigger boing; slam onto one for th
 
 Desktop: A/D or arrows, Space jump, R or Shift roll, E or X action, Escape pause. The mouse emulates one finger.
 
-The pause menu has back-to-checkpoint, restart, music and sound toggles, and a small lab (collision overlay, walk speed, jump power).
+The pause menu has back-to-checkpoint, restart, music, sound and vibration toggles, and a small lab (collision overlay, walk speed, jump power). Those three settings are remembered, and so are your records: the results card compares each run with your most seeds, most snoozles and quickest time.
 
 ## Play on your phone
 

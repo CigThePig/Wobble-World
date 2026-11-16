@@ -1,5 +1,6 @@
 extends Node
-# Developer aid: --shots=x:y:mode;x:y... teleports Bloop and saves real renderer frames.
+# Developer aid: --shots=x:y:flags;x:y... teleports Bloop and saves real renderer frames.
+# Flags: r roll, d ring the bell and wait for the results card, b seed fake records, p pause.
 var world: Node
 var spec := ""
 func _ready() -> void:
@@ -13,9 +14,14 @@ func run() -> void:
 		world.controls.started = parts.size() > 2
 		if parts.size() > 2 and parts[2].contains("r"):
 			world.bloop.set_rolling(true)
+		if parts.size() > 2 and parts[2].contains("b"):
+			# Pretend an earlier run exists, so the results card shows its record notes.
+			world.save.set_value("best", "seeds", 60)
+			world.save.set_value("best", "snoozles", 2)
+			world.save.set_value("best", "time", 12.0)
 		if parts.size() > 2 and parts[2].contains("d"):
 			world.ring_bell()
-		var ticks := 400 if parts.size() > 2 and parts[2].contains("d") else 50
+		var ticks := 470 if parts.size() > 2 and parts[2].contains("d") else 50
 		for i in ticks:
 			await get_tree().physics_frame
 		if parts.size() > 2 and parts[2].contains("p"):

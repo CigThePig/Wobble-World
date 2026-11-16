@@ -3,11 +3,11 @@
 1. Sign into GitHub on the phone. Open the successful [Android playable APK run](https://github.com/CigThePig/Wobble-World/actions/workflows/android.yml) for the PR's commit.
 2. Download **WobbleWorld-android-arm64-debug-COMMIT** under Artifacts. Do not use emulator-package (x86_64).
 3. Samsung **My Files → Downloads → ZIP → Extract**. Tap the APK; allow installation for My Files if Android requests it. Open **Wobble World Dev**. No Godot/editor/computer is required.
-4. The app is offline, landscape, and installs separately from Mosslight under `com.cigthepig.wobbleworld.dev`. It requests no network/storage permissions. Artifacts expire after 30 days.
+4. The app is offline, landscape, and installs separately from Mosslight under `com.cigthepig.wobbleworld.dev`. It requests no network or storage permissions; the only permission is vibration. Artifacts expire after 30 days.
 
 ## Signing and updates
 
-Initial builds generate a fresh temporary debug key on the hosted runner. An APK from a later run may fail to update an earlier installation because the signatures differ. Uninstalling allows installation but removes private application data. There is currently no progression save; future local files would also be removed. Do not commit or share private keys.
+Initial builds generate a fresh temporary debug key on the hosted runner. An APK from a later run may fail to update an earlier installation because the signatures differ. Uninstalling allows installation but removes private application data. That includes saved settings and records. Do not commit or share private keys.
 
 For persistent development signing, a maintainer may configure repository Actions secrets `ANDROID_DEV_KEYSTORE_BASE64`, `ANDROID_DEV_KEYSTORE_ALIAS`, and `ANDROID_DEV_KEYSTORE_PASSWORD` (same password for key and store). Signing material remains outside source/artifacts; alias/password are supplied only to export steps. Switching from temporary to persistent signing requires a one-time uninstall. Subsequent builds with that same key/package can update in place; workflow run numbers generate increasing version codes.
 
@@ -22,6 +22,8 @@ Toolchain: official Godot 4.6.1 GDScript editor and matching non-.NET templates,
 - Slam the cracked floor, wake the snoozle, boing back out. Then hold Jump on the big mushroom to clear the wall.
 - Boost down the long descent and ride the launch ramp. Ring the bell.
 - Check button reach, cutout and gesture clearance, readability of the icons, and sound and music levels.
+- Vibration: is it there on kicks, slams, mushrooms and the bell? Too strong, too weak, too often? Try the toggle in the pause menu.
+- Finish twice. Does the second results card show your records, and do the toggles survive closing the app?
 - Pause with movement held; background with fingers down, return and resume. Movement should stay released.
 - Report crashes, stutters, getting stuck, or any place you didn't know what to do. Turn on the Lab overlay in the pause menu and include the build identifier it shows.
 
